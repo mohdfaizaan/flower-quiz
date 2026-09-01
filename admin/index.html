@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Dashboard - Flowers of Quran</title>
+
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="../src/css/style.css?v=11.0">
+
+  <!-- Admin Specific Stylesheet -->
+  <link rel="stylesheet" href="../src/css/admin.css?v=1.0">
+</head>
+
+<body class="admin-body">
+
+  <!-- 1. LOGIN SCREEN (Visible when not authenticated) -->
+  <div id="admin-login-view" class="admin-login-container">
+    <div class="modal-card admin-login-card">
+      <div class="flex-center mb-6" style="display: flex; align-items: center; justify-content: center;">
+        <div class="brand-flower-icon" style="font-size: 2.5rem;">🌸</div>
+        <h1 class="brand-title" style="margin-left: 10px; font-size: 1.8rem;">Aayaatul Quran</h1>
+      </div>
+
+      <p class="text-muted text-center" style="margin-bottom: 24px; font-weight: 600;">
+        Sign in to access user management, analytics & progress monitor
+      </p>
+
+      <div id="auth-error-msg" class="feedback-box wrong" style="display:none; margin-bottom: 14px;"></div>
+
+      <form id="admin-login-form" class="space-y-4 text-left">
+        <div style="margin-bottom: 14px;">
+          <label style="display:block; font-weight:700; margin-bottom:6px;">Admin Email</label>
+          <input type="email" id="login-email" class="option-btn" style="width:100%; cursor:text; text-align: left;"
+            placeholder="@gmail.com" required>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <label style="display:block; font-weight:700; margin-bottom:6px;">Password</label>
+          <input type="password" id="login-password" class="option-btn"
+            style="width:100%; cursor:text; text-align: left;" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn-next-question w-full" id="btn-submit-login" style="width: 100%;">
+          Sign In to Admin Panel ➔
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. MAIN ADMIN DASHBOARD (Hidden initially) -->
+  <div id="admin-dashboard-view" class="admin-dashboard-wrapper" style="display: none;">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <div class="brand-flower-icon" style="font-size: 1.8rem;">🌸</div>
+        <span class="brand-title text-xl" style="font-size: 1.4rem;">Admin Panel</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Main Menu</div>
+        <button class="sidebar-link active">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Dashboard Overview</span>
+        </button>
+        <button class="sidebar-link">
+          <i class="fa-solid fa-users"></i>
+          <span>Registered Users</span>
+        </button>
+        <button class="sidebar-link">
+          <i class="fa-solid fa-message"></i>
+          <span>New Messages</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="btn-admin-logout" class="sidebar-link logout-link">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="admin-main-content">
+
+      <!-- ═══ PANEL 1: DASHBOARD OVERVIEW ═══ -->
+      <div id="panel-dashboard" class="admin-panel">
+
+        <!-- Top Header Bar -->
+        <header class="admin-top-header">
+          <div>
+            <h1 class="hero-main-title" style="font-size: 2rem; margin-bottom: 0;">Hello, Admin 👋</h1>
+            <p class="section-sub-title">Welcome back to Aayaatul Quran Overview</p>
+          </div>
+          <div class="admin-top-actions">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="user-search-input" placeholder="Search users (⌘K)" class="search-input">
+            </div>
+            <button id="btn-refresh-data" class="btn-icon-sound notification-btn" title="Refresh Data">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+            <button class="btn-icon-sound notification-btn" title="Notifications">
+              <i class="fa-regular fa-bell"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- KPI CARDS -->
+        <section class="kpi-grid mt-6">
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+              <span class="kpi-title">Total Registered Users</span>
+            </div>
+            <div class="kpi-value" id="kpi-total-users">0</div>
+            <div class="kpi-trend neutral" id="kpi-total-trend">Connecting to DB...</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon" style="color: #2563EB; background: #DBEAFE;"><i class="fa-solid fa-seedling"></i></div>
+              <span class="kpi-title">Active Learners</span>
+            </div>
+            <div class="kpi-value" id="kpi-active-learners">0</div>
+            <div class="kpi-trend positive" id="kpi-active-trend">Started progress</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon" style="color: #D97706; background: #FEF3C7;"><i class="fa-solid fa-medal"></i></div>
+              <span class="kpi-title">Completed Users</span>
+            </div>
+            <div class="kpi-value" id="kpi-completed-users">0</div>
+            <div class="kpi-trend positive" id="kpi-completed-trend">All 24 flowers</div>
+          </div>
+        </section>
+
+        <!-- Quick Users Preview Table -->
+        <section class="table-section mt-6">
+          <div class="table-header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <h3 class="section-card-title text-lg" style="font-size: 1.1rem; margin-bottom: 4px;">Recent Users</h3>
+              <p class="section-card-sub" style="margin-bottom: 0;">Latest registered users overview</p>
+            </div>
+            <span class="status-badge-bottom ready" id="users-count-badge">0 Users</span>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>User Name</th>
+                  <th>Phone / Email</th>
+                  <th>Joined Date</th>
+                  <th>Overall Progress</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- ═══ PANEL 2: REGISTERED USERS (Full View) ═══ -->
+      <div id="panel-users" class="admin-panel" style="display: none;">
+
+        <header class="admin-top-header">
+          <div>
+            <h1 class="hero-main-title" style="font-size: 2rem; margin-bottom: 0;">Registered Users 📋</h1>
+            <p class="section-sub-title">All users from Supabase database</p>
+          </div>
+          <div class="admin-top-actions">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="panel-users-search" placeholder="Search by name or phone..." class="search-input">
+            </div>
+            <button id="btn-refresh-users" class="btn-icon-sound notification-btn" title="Refresh Data">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+          </div>
+        </header>
+
+        <section class="table-section mt-6">
+          <div class="table-header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <h3 class="section-card-title text-lg" style="font-size: 1.1rem; margin-bottom: 4px;">All Registered Users & Progress</h3>
+              <p class="section-card-sub" style="margin-bottom: 0;">Click on any user to see detailed 3-app progress breakdown</p>
+            </div>
+            <span class="status-badge-bottom ready" id="panel-users-count-badge">0 Users</span>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>User ID</th>
+                  <th>User Name</th>
+                  <th>Phone / Email</th>
+                  <th>Age</th>
+                  <th>Gender</th>
+                  <th>Joined</th>
+                  <th>🌸 Flowers</th>
+                  <th>📿 Pearls</th>
+                  <th>📖 Aayaat</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="panel-users-table-body">
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ═══ USER DETAILS MODAL (3 Progress Bars) ═══ -->
+  <div class="modal-overlay" id="user-details-modal">
+    <div class="modal-card" style="max-width: 560px; text-align: left;">
+
+      <!-- Modal Header -->
+      <div class="modal-header"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="brand-flower-icon" style="font-size: 1.5rem;">🌸</div>
+          <div>
+            <h2 class="brand-title" style="font-size: 1.3rem;">User Details</h2>
+            <p class="section-card-sub" style="margin:0;" id="modal-user-id">ID: —</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" id="btn-close-user-modal" style="position: static; margin: 0;">✕</button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Profile Info -->
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+          <div>
+            <h5 id="modal-user-name"
+              style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800;">User Name</h5>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+              <i class="fa-solid fa-phone"></i> <span id="modal-user-phone">—</span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+              <i class="fa-regular fa-envelope"></i> <span id="modal-user-email">—</span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+              <i class="fa-regular fa-calendar"></i> Joined on <span id="modal-user-date">—</span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+              <i class="fa-solid fa-venus-mars"></i> <span id="modal-user-gender">—</span> · Age: <span id="modal-user-age">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 App Progress Bars -->
+        <div style="background: var(--gold-light); border: 1.5px solid var(--gold-border); border-radius: 16px; padding: 20px; margin-bottom: 16px;">
+          <h4 style="font-weight: 800; font-size: 1rem; margin-bottom: 16px; color: var(--gold-dark);">
+            <i class="fa-solid fa-chart-bar"></i> App-wise Progress
+          </h4>
+
+          <!-- Flowers of Quran -->
+          <div class="app-progress-row">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; font-size: 0.85rem;">🌸 Flowers of Quran</span>
+              <span style="font-weight: 800; font-size: 0.85rem;" id="modal-flowers-pct">0%</span>
+            </div>
+            <div class="progress-bar-bg" style="width: 100%; height: 8px;">
+              <div class="progress-bar-fill" id="modal-flowers-bar" style="width: 0%; background: #CC9933; height: 100%; border-radius: 4px; transition: width 0.8s ease;"></div>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;"><span id="modal-flowers-count">0</span> / 24 completed</p>
+          </div>
+
+          <!-- Pearls of Quran -->
+          <div class="app-progress-row" style="margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; font-size: 0.85rem;">📿 Pearls of Quran</span>
+              <span style="font-weight: 800; font-size: 0.85rem;" id="modal-pearls-pct">0%</span>
+            </div>
+            <div class="progress-bar-bg" style="width: 100%; height: 8px;">
+              <div class="progress-bar-fill" id="modal-pearls-bar" style="width: 0%; background: #2563EB; height: 100%; border-radius: 4px; transition: width 0.8s ease;"></div>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;"><span id="modal-pearls-count">0</span> completed</p>
+          </div>
+
+          <!-- Aayaatul Quran -->
+          <div class="app-progress-row" style="margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; font-size: 0.85rem;">📖 Aayaatul Quran</span>
+              <span style="font-weight: 800; font-size: 0.85rem;" id="modal-aayaat-pct">0%</span>
+            </div>
+            <div class="progress-bar-bg" style="width: 100%; height: 8px;">
+              <div class="progress-bar-fill" id="modal-aayaat-bar" style="width: 0%; background: #D97706; height: 100%; border-radius: 4px; transition: width 0.8s ease;"></div>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;"><span id="modal-aayaat-count">0</span> completed</p>
+          </div>
+        </div>
+
+        <!-- Login Source -->
+        <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px 18px;">
+          <h4 style="font-weight: 800; font-size: 0.9rem; margin-bottom: 8px; color: var(--text-dark);">
+            <i class="fa-solid fa-link"></i> Login Source
+          </h4>
+          <p style="font-size: 0.82rem; color: var(--text-muted);" id="modal-login-source">—</p>
+        </div>
+
+        <!-- Status -->
+        <div style="margin-top: 14px; text-align: center;">
+          <span class="status-badge-bottom done" id="modal-user-status">Active</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../src/js/admin.js?v=2.0"></script>
+</body>
+
+</html>

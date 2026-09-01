@@ -1,0 +1,357 @@
+/* admin.css - Aayaatul Quran Admin Panel Styles (White & Gold Theme) */
+
+/* Utilities */
+.mt-6 { margin-top: 24px; }
+.admin-panel { animation: panelFadeIn 0.3s ease; }
+@keyframes panelFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.notification-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1.5px solid #E5E7EB;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+.notification-btn:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+.admin-body {
+  background-color: var(--bg-primary);
+  font-family: var(--font-body);
+  color: var(--text-dark);
+  margin: 0;
+  padding: 0;
+}
+
+/* Login View */
+.admin-login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.admin-login-card {
+  background: var(--card-bg);
+  border: 2px solid var(--gold-border);
+  border-radius: var(--radius-card);
+  padding: 40px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: var(--shadow-card);
+}
+
+/* Dashboard Layout */
+.admin-dashboard-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.admin-sidebar {
+  width: 260px;
+  background: var(--card-bg);
+  border-right: 2px solid var(--gold-border);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40px;
+  padding: 0 10px;
+}
+
+.nav-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  padding-left: 14px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.sidebar-link:hover {
+  background: var(--gold-light);
+  color: var(--gold-dark);
+}
+
+.sidebar-link.active {
+  background: var(--gold-primary);
+  color: #FFFFFF;
+  box-shadow: 0 4px 10px var(--gold-glow);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--gold-light);
+  padding-top: 20px;
+}
+
+.logout-link {
+  color: #EF4444;
+}
+
+.logout-link:hover {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+
+/* Main Content */
+.admin-main-content {
+  flex: 1;
+  padding: 32px 40px;
+  background: var(--bg-primary);
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.admin-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1.5px solid #E5E7EB;
+  padding-bottom: 24px;
+}
+
+.admin-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-box {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.search-input {
+  padding: 10px 16px 10px 40px;
+  border-radius: 12px;
+  border: 1.5px solid #E5E7EB;
+  background: #FFFFFF;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  width: 280px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  border-color: var(--gold-primary);
+}
+
+/* KPI Cards */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.kpi-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--gold-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+}
+
+.kpi-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kpi-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--gold-light);
+  color: var(--gold-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.kpi-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.kpi-value {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.kpi-trend {
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kpi-trend.positive {
+  color: #16A34A;
+}
+
+.kpi-trend.neutral {
+  color: var(--text-muted);
+}
+
+/* Table Section */
+.table-section {
+  background: var(--card-bg);
+  border: 1.5px solid var(--gold-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-table th {
+  padding: 16px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1.5px solid #E5E7EB;
+}
+
+.admin-table td {
+  padding: 16px 12px;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.admin-table tbody tr {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.admin-table tbody tr:hover {
+  background: var(--gold-light);
+}
+
+.user-info-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--gold-border);
+}
+
+.user-name-text {
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.progress-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-bar-bg {
+  width: 100px;
+  height: 6px;
+  background: #F3F4F6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.progress-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.action-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #F3F4F6;
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-table tbody tr:hover .action-btn {
+  background: var(--gold-primary);
+  color: #FFF;
+}

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Flowers of Quran - Kid-Friendly Islamic Quiz Platform</title>
+  <meta name="description"
+    content="Welcome to Flowers of the Quran — a special place for children to discover, understand, and follow the beautiful teachings of the Quran. Combines a printed book with online learning.">
+
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Mozilla PDF.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- jsPDF for Certificate Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="src/css/style.css?v=11.0">
+
+  <!-- Supabase JS Client v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+  <!-- App Wrapper Container -->
+  <div class="app-wrapper">
+
+    <!-- Top Navigation Bar (Responsive with Hamburger) -->
+    <header class="top-nav-header">
+      <div class="nav-container">
+        <!-- Left: Logo -->
+        <a href="#home" class="nav-brand">
+          <img src="assets/images/flowers_of_quran_web_logo.svg" alt="Logo" style="height: 60px; margin: 5px 0;">
+        </a>
+
+        <!-- Mobile Hamburger Toggle Button -->
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Toggle navigation menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <!-- Right: Menu Links & Actions -->
+        <nav class="nav-menu" id="nav-menu">
+          <a href="#home" class="nav-link active">Home</a>
+          <a href="#about" class="nav-link" id="link-about">About</a>
+          <a href="#contact" class="nav-link" id="link-contact">Contact</a>
+          <div class="nav-buttons-group">
+            <button class="nav-btn-gold" id="btn-login-nav">Login</button>
+            <button class="nav-btn-outline" id="btn-register-nav">Register</button>
+            <button class="nav-btn-outline" id="btn-logout-nav"
+              style="display: none; background: #EF4444; border-color: #EF4444; color: #fff; font-weight: 700; cursor: pointer;">🚪
+              Sign Out</button>
+            <button id="btn-sound" class="btn-sound-toggle" title="Toggle Sound">🔊</button>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <!-- HERO SECTION WITH FLOATING MINI-BOARD CARD -->
+    <section class="hero-section" id="home">
+      <div class="hero-container">
+
+        <!-- Left Side: Intro Content -->
+        <div class="hero-content">
+
+          <h1 class="hero-main-title">Enter the Garden of the Quran,<br>Discover Its Beautiful Flowers.</h1>
+          <p class="hero-description">
+            Welcome to “Flowers of the Quran” — a special place for children to discover, understand,
+            and follow the beautiful and meaningful teachings of the Quran.
+          </p>
+
+          <!-- Bottom Left Action Area -->
+          <div class="hero-action-area">
+            <button class="btn-hero-start" id="btn-start-quiz">
+              Start Quiz ➔
+            </button>
+            <span class="hero-note">🌸 24 Blooming Levels • 72 Quizzes</span>
+          </div>
+        </div>
+
+        <!-- Right Side: Floating Mini-Board Card Component -->
+        <div class="hero-floating-wrapper">
+          <div class="mini-board">
+            <div class="mini-board-title">
+              <span class="zone-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <div>
+                <small>Easy routine</small>
+                <h2>4 Tiny Steps</h2>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-card"><b>1</b><i class="fa-solid fa-book-open"></i><span>Read</span></div>
+              <div class="step-card"><b>2</b><i class="fa-solid fa-lightbulb"></i><span>Reflect</span></div>
+              <div class="step-card"><b>3</b><i class="fa-solid fa-list-check"></i><span>Quiz</span></div>
+              <div class="step-card"><b>4</b><i class="fa-solid fa-award"></i><span>Reward</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- STATS BANNER SECTION (Compact & Equal Spacing) -->
+    <section class="stats-banner-section">
+      <div class="stats-banner-container">
+
+        <!-- Stat 1 -->
+        <div class="stat-box">
+          <div class="stat-number">234</div>
+          <div class="stat-label">Flowers of Quran</div>
+        </div>
+
+        <!-- Stat 2 -->
+        <div class="stat-box">
+          <div class="stat-number">72</div>
+          <div class="stat-label">Quizzes on Quran</div>
+        </div>
+
+        <!-- Stat 3 -->
+        <div class="stat-box">
+          <div class="stat-number">24</div>
+          <div class="stat-label">Levels to Unlock</div>
+        </div>
+
+        <!-- Stat 4 -->
+        <div class="stat-box">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Kid Friendly</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 24 FLOWER QUIZ GARDEN SECTION (White Themed, No Stars) -->
+    <main class="quiz-garden-section" id="garden-section">
+      <div class="section-header">
+        <h2 class="section-main-title">Flowers of Quran - The Learning Garden</h2>
+        <p class="section-sub-title">Read the 10-page study material and complete the 3-question quiz to unlock the next
+          flower!</p>
+      </div>
+
+      <!-- Stats Bar (Clean & White, No Stars) -->
+      <div class="module-stats-bar">
+        <div class="mod-stat">
+          <span class="stat-badge-icon">🌸</span>
+          <span>Flowers Bloomed:</span>
+          <span class="mod-stat-val" id="mod-sections-count">0 / 24</span>
+        </div>
+      </div>
+
+      <!-- 24 Sections Grid -->
+      <div class="sections-grid" id="sections-grid">
+        <!-- 24 Flower Level Cards Dynamically Rendered by quran_app.js -->
+      </div>
+    </main>
+
+    <!-- FOOTER SECTION -->
+    <footer class="app-footer">
+      <div class="footer-container">
+
+        <!-- Column 1: Brand & Details -->
+        <div class="footer-col brand-col">
+          <div class="footer-logo">
+            <span class="footer-title">Flowers of Quran</span>
+          </div>
+          <p class="footer-about-text">
+            Welcome to "Flowers of the Quran" — a special place for children to discover, understand, and follow the
+            beautiful and meaningful teachings of the Quran.
+          </p>
+        </div>
+
+        <!-- Column 2: Quick Links -->
+        <div class="footer-col links-col">
+          <h3 class="footer-heading">Quick Links</h3>
+          <ul class="footer-links-list">
+            <li><a href="#home" class="footer-link">Home</a></li>
+            <li><a href="#about" class="footer-link" id="footer-link-about">About Us</a></li>
+            <li><a href="#contact" class="footer-link" id="footer-link-contact">Contact Us</a></li>
+            <li><a href="#garden-section" class="footer-link">Learning Garden</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Contact Info -->
+        <div class="footer-col contact-col">
+          <h3 class="footer-heading">Contact Us</h3>
+          <div class="footer-contact-item">
+            <span class="contact-icon">📧</span>
+            <a href="mailto:support@flowersofquran.com" class="footer-link">support@flowersofquran.com</a>
+          </div>
+          <div class="footer-contact-item">
+            <span class="contact-icon">📞</span>
+            <a href="tel:+18001234567" class="footer-link">+1 (800) 123-4567</a>
+          </div>
+          <div class="footer-contact-item">
+            <span class="contact-icon">📍</span>
+            <span>Makkah / Global Online Platform</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Copyright -->
+      <div class="footer-bottom">
+        <p>© 2026 Flowers of Quran. All rights reserved. Empowering young hearts with Quranic wisdom.</p>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- PDF STUDY READER MODAL (10 Pages per Flower) -->
+  <div class="modal-overlay" id="pdf-modal">
+    <div class="modal-card pdf-reader-card">
+
+      <!-- PDF Modal Header with Top Right Zoom Controls -->
+      <div class="modal-header pdf-header">
+        <div class="pdf-header-info">
+          <span class="pdf-flower-icon" id="pdf-flower-icon">🌸</span>
+          <div>
+            <h2 class="pdf-flower-title" id="pdf-flower-title">Flower 1 Study Material</h2>
+            <p class="pdf-page-range-sub" id="pdf-page-range-sub">Read Pages 1 – 10 before taking the quiz</p>
+          </div>
+        </div>
+
+        <!-- Top Right Actions: Zoom (+10% / -10%) & Close -->
+        <div class="pdf-header-actions">
+          <div class="pdf-zoom-control">
+            <button class="btn-zoom" id="btn-zoom-out" title="Zoom Out (-10%)" aria-label="Zoom out">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <span class="zoom-value" id="pdf-zoom-val">100%</span>
+            <button class="btn-zoom" id="btn-zoom-in" title="Zoom In (+10%)" aria-label="Zoom in">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+          <button class="btn-close-modal" id="btn-close-pdf" title="Close Reader">✕</button>
+        </div>
+      </div>
+
+      <!-- PDF Canvas View Area -->
+      <div class="pdf-viewer-body">
+        <div class="pdf-canvas-container" id="pdf-canvas-container">
+          <div id="pdf-loading-spinner" class="pdf-spinner">
+            <i class="fa-solid fa-spinner fa-spin"></i> Loading PDF Study Material...
+          </div>
+          <canvas id="pdf-render-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- PDF Reader Navigation Toolbar & Quiz Action -->
+      <div class="pdf-reader-footer">
+        <div class="pdf-nav-controls">
+          <button class="btn-pdf-nav" id="btn-pdf-prev" title="Previous Page">
+            <i class="fa-solid fa-chevron-left"></i> Previous
+          </button>
+
+          <div class="pdf-page-indicator">
+            Page <span id="pdf-current-page" class="pdf-page-highlight">1</span> of <span id="pdf-total-page">10</span>
+          </div>
+
+          <button class="btn-pdf-nav" id="btn-pdf-next" title="Next Page">
+            Next <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="pdf-action-area">
+          <div class="pdf-read-hint" id="pdf-read-hint">
+            <i class="fa-solid fa-book-open-reader"></i> Read all pages to unlock quiz
+          </div>
+          <button class="btn-proceed-quiz" id="btn-proceed-quiz" style="display: none;">
+            Proceed to Quiz ➔
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- QUIZ MODAL OVERLAY (Strict Evaluation & Error Review) -->
+  <div class="modal-overlay" id="quiz-modal">
+    <div class="modal-card">
+
+      <!-- 1. Question Answering View -->
+      <div id="quiz-view">
+        <div class="modal-header">
+          <button class="btn-close-modal" id="btn-close-modal">✕</button>
+          <div style="font-size: 3rem; margin-bottom: 4px;" id="modal-flower-icon">🌸</div>
+          <div class="modal-flower-title" id="modal-flower-title">Flower 1</div>
+          <div style="font-size: 0.95rem; opacity: 0.9;" id="modal-flower-sub">Pages 1 – 10</div>
+        </div>
+
+        <div class="modal-body">
+          <div class="question-stepper" id="question-stepper"></div>
+
+          <div class="question-box">
+            <div class="question-text" id="question-text">Loading question...</div>
+          </div>
+
+          <div class="options-grid" id="options-grid"></div>
+          <div class="feedback-box" id="feedback-box"></div>
+
+          <button class="btn-next-question" id="btn-next-question" disabled>
+            Next Question ➔
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Victory / Level Passed View (All 3 Correct) -->
+      <div id="victory-view" style="display: none;">
+        <div class="victory-card">
+          <div style="font-size: 4.5rem;" id="victory-flower-icon">🌸</div>
+          <h2 class="victory-title" id="victory-title">Flower 1</h2>
+          <div class="score-badge pass-badge">
+            <i class="fa-solid fa-circle-check"></i> Perfect Score: 3 / 3 Correct!
+          </div>
+          <p style="font-size: 1.05rem; font-weight: 600; color: #4B5563; margin: 16px 0 24px 0;">
+            MashAllah! You answered all 3 questions correctly! The next flower level is now unlocked!
+          </p>
+          <div class="victory-actions-row">
+            <button class="btn-victory-back" id="btn-victory-back">⬅ Back</button>
+            <button class="btn-next-question btn-victory-study" id="btn-victory-next">
+              Study Flower 2 ➔
+            </button>
+          </div>
+          <button class="btn-next-question" id="btn-victory-download-cert" style="display: none; background-color: #10B981; margin-top: 16px; width: 100%;">
+            📥 Download Certificate
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. Failure / Error Breakdown View (If Any Wrong) -->
+      <div id="failure-view" style="display: none;">
+        <div class="failure-card">
+          <div style="font-size: 4rem; color: #EF4444;">❌</div>
+          <h2 class="failure-title">Quiz Not Passed</h2>
+          <div class="score-badge fail-badge" id="failure-score-badge">
+            Score: 1 / 3 Correct
+          </div>
+          <p style="font-size: 0.95rem; color: #6B7280; margin: 8px 0 16px 0;">
+            You must answer all 3 questions correctly to bloom this flower and unlock the next level.
+          </p>
+
+          <!-- List of Missed Questions -->
+          <div class="error-breakdown-container">
+            <h3 class="error-breakdown-heading">Questions to Review:</h3>
+            <div id="error-breakdown-list" class="error-breakdown-list">
+              <!-- Dynamically populated review cards -->
+            </div>
+          </div>
+
+          <!-- Action Button: Retry after reading PDF -->
+          <div class="failure-actions" style="margin-top: 18px;">
+            <button class="btn-retry-action" id="btn-review-pdf" style="width: 100%;">
+              <i class="fa-solid fa-book-open"></i> Retry after reading PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div class="modal-overlay" id="about-modal">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <button class="btn-close-modal" id="btn-close-about">✕</button>
+        <div style="font-size: 3rem; margin-bottom: 4px;">🌸</div>
+        <h2 style="font-family: var(--font-heading); font-size: 1.6rem; color: #fff;">About Flowers of Quran</h2>
+      </div>
+      <div class="modal-body" style="padding: 24px; text-align: left; line-height: 1.6;">
+        <h3
+          style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--gold-dark); margin-bottom: 10px; font-weight: 700;">
+          About our project:</h3>
+        <p style="margin-bottom: 14px; font-weight: 600; color: var(--text-dark);">
+          <strong>Flowers of Quran</strong> is a part of <em>'Aayaatul Quran'</em> Project and it combines a printed
+          book with online learning.
+        </p>
+        <p style="margin-bottom: 14px; color: #4B5563;">
+          We warmly welcome children to join us in learning and understanding the verses of the Quran.
+        </p>
+        <p style="margin-bottom: 14px; color: #4B5563;">
+          We also invite volunteers to assist in delivering the book to school students, and we welcome sponsors and
+          supporters to help us spread the message of the Quran.
+        </p>
+        <div
+          style="background: var(--gold-light); border: 1.5px solid var(--gold-border); border-radius: 12px; padding: 14px; margin-top: 16px;">
+          <p
+            style="color: var(--gold-dark); font-style: italic; font-weight: 600; font-size: 0.95rem; line-height: 1.5;">
+            Inspired by the Hadith, “Pass on from me, even if it is only one verse” (Sahih al-Bukhari: 3461). Let us all
+            work together to convey the message of the Quran, especially to the next generation.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Modal -->
+  <div class="modal-overlay" id="contact-modal">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <button class="btn-close-modal" id="btn-close-contact">✕</button>
+        <div style="font-size: 3rem; margin-bottom: 4px;">📬</div>
+        <h2 style="font-family: var(--font-heading); font-size: 1.6rem; color: #fff;">Contact Us</h2>
+      </div>
+      <div class="modal-body" style="padding: 24px;">
+        <div id="contact-success-msg" class="feedback-box correct" style="display:none; margin-bottom: 14px;">
+          Thank you! Your message has been sent.
+        </div>
+        <div style="margin-bottom: 14px; text-align: left;">
+          <label style="display:block; font-weight:700; margin-bottom:6px;">Your Name</label>
+          <input type="text" id="contact-name" class="option-btn" style="width:100%; cursor:text;"
+            placeholder="Parent / Student Name" required>
+        </div>
+        <div style="margin-bottom: 14px; text-align: left;">
+          <label style="display:block; font-weight:700; margin-bottom:6px;">Email Address</label>
+          <input type="email" id="contact-email" class="option-btn" style="width:100%; cursor:text;"
+            placeholder="support@flowersofquran.com" required>
+        </div>
+        <div style="margin-bottom: 14px; text-align: left;">
+          <label style="display:block; font-weight:700; margin-bottom:6px;">Message</label>
+          <textarea id="contact-message" class="option-btn" style="width:100%; height:90px; cursor:text;"
+            placeholder="Write your message here..."></textarea>
+        </div>
+        <button class="btn-next-question" id="btn-submit-contact">Send Message ➔</button>
+      </div>
+    </div>
+  </div>
+  <!-- Certificate Preview Modal -->
+  <div class="modal-overlay" id="certificate-modal">
+    <div class="modal-card" style="max-width: 500px; padding: 0;">
+      <div class="modal-header">
+        <h2 class="modal-title">🎓 Your Certificate</h2>
+        <button class="btn-close-modal" id="btn-close-certificate">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 24px; text-align: center;">
+        <p style="margin-bottom: 20px; font-size: 1.1rem; color: #4B5563;">Congratulations on completing all 24 Flowers of Quran!</p>
+        
+        <!-- Preview of the certificate image (Scaled down to fit screen without scrolling) -->
+        <div style="position: relative; display: inline-block; width: 100%; max-width: 380px; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <img src="assets/downloads/FLOWERS OF QURAN CERTIFICATE.jpg.jpeg" alt="Certificate Preview" style="width: 100%; display: block;">
+          <div id="cert-preview-name" style="position: absolute; top: 46.2%; left: 50%; transform: translate(-50%, -100%); margin-top: -4px; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 19px; color: #000; text-align: center; width: 100%; text-transform: uppercase;">
+            STUDENT NAME
+          </div>
+        </div>
+
+        <button id="btn-download-pdf-cert" class="btn-next-question" style="margin-top: 24px; width: 100%;">
+          📥 Download Certificate (PDF)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login / Register Modal -->
+  <div class="modal-overlay" id="login-modal">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <button class="btn-close-modal" id="btn-close-login">✕</button>
+        <div style="font-size: 3rem; margin-bottom: 4px;">📱</div>
+        <h2 style="font-family: var(--font-heading); font-size: 1.6rem; color: #fff;" id="modal-auth-title">Sign In /
+          Register</h2>
+      </div>
+
+      <div class="modal-body" style="padding: 24px;">
+        <!-- Auth Mode Switch Tabs -->
+        <div class="auth-tabs">
+          <button type="button" id="tab-auth-login" class="auth-tab-btn active">Sign In</button>
+          <button type="button" id="tab-auth-register" class="auth-tab-btn">Register</button>
+        </div>
+
+        <div id="auth-error-msg" class="feedback-box wrong" style="display:none; margin-bottom: 14px;"></div>
+        <div id="auth-success-msg" class="feedback-box correct" style="display:none; margin-bottom: 14px;"></div>
+
+        <!-- Auth Form View -->
+        <div id="auth-form-view">
+          <!-- Register Only Field: Name -->
+          <div id="field-auth-name" class="register-only-field"
+            style="display: none; margin-bottom: 12px; text-align: left;">
+            <label style="display:block; font-weight:700; margin-bottom:5px; font-size:0.9rem;">Full Name</label>
+            <input type="text" id="auth-name" class="option-btn" style="width:100%; cursor:text; padding:10px 14px;"
+              placeholder="Full Name">
+          </div>
+
+          <!-- Phone Number Field -->
+          <div id="field-auth-phone" style="margin-bottom: 14px; text-align: left;">
+            <label style="display:block; font-weight:700; margin-bottom:5px; font-size:0.9rem;">Phone Number</label>
+            <div style="display: flex; gap: 8px;">
+              <select id="auth-country-code" class="option-btn"
+                style="width: 115px; cursor: pointer; padding: 10px 8px; font-weight: 700; background: #fff; font-size: 0.9rem;">
+                <option value="+91" selected>🇮🇳 +91</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+971">🇦🇪 +971</option>
+                <option value="+966">🇸🇦 +966</option>
+                <option value="+880">🇧🇩 +880</option>
+                <option value="+60">🇲🇾 +60</option>
+                <option value="+62">🇮🇩 +62</option>
+                <option value="+90">🇹🇷 +90</option>
+              </select>
+              <input type="tel" id="auth-phone-num" class="option-btn"
+                style="flex: 1; cursor: text; padding: 10px 14px; font-size: 1rem; font-weight: 600;"
+                placeholder="9876543210" maxlength="10" required>
+            </div>
+            <small style="color: #6B7280; font-size: 0.78rem; display: block; margin-top: 4px;"
+              id="phone-hint-text">Enter 10-digit mobile number</small>
+          </div>
+
+          <!-- Register Only Field: Age -->
+          <div id="field-auth-age" class="register-only-field"
+            style="display: none; margin-bottom: 12px; text-align: left;">
+            <label style="display:block; font-weight:700; margin-bottom:5px; font-size:0.9rem;">Age</label>
+            <input type="number" id="auth-age" class="option-btn" style="width:100%; cursor:text; padding:10px 14px;"
+              placeholder="Age (e.g. 10)" min="3" max="100">
+          </div>
+
+          <!-- Register Only Field: Gender -->
+          <div id="field-auth-gender" class="register-only-field"
+            style="display: none; margin-bottom: 16px; text-align: left;">
+            <label style="display:block; font-weight:700; margin-bottom:5px; font-size:0.9rem;">Gender</label>
+            <select id="auth-gender" class="option-btn"
+              style="width:100%; cursor:pointer; padding:10px 14px; background:#fff;">
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+
+          <!-- Access Submit Button -->
+          <button type="button" class="btn-next-question" id="btn-submit-phone-auth"
+            style="margin-top: 10px; width: 100%;">
+            Sign In & Get Access ➔
+          </button>
+        </div>
+
+        <div id="auth-logged-in-view" style="display: none; text-align: center;">
+          <h3 style="font-family: var(--font-heading);" id="logged-in-user-info">+91 98765 43210</h3>
+          <p style="color: var(--gold-dark); font-weight: 700; margin: 12px 0 20px 0;">✅ Cloud Sync Connected</p>
+          <button class="btn-next-question" id="btn-logout" style="background: #EF4444;">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Notice Box Modal -->
+  <div class="modal-overlay" id="logout-confirm-modal">
+    <div class="modal-card" style="max-width: 420px; text-align: center; padding: 28px 22px;">
+      <div style="font-size: 2.8rem; margin-bottom: 8px;">🚪</div>
+      <h3 style="font-family: var(--font-heading); font-size: 1.4rem; margin-bottom: 8px; color: #111;">Sign Out Notice
+      </h3>
+      <p style="font-size: 0.95rem; color: #555; line-height: 1.5; margin-bottom: 22px;">
+        Are you sure you want to sign out from this device? Your learning progress across Flowers, Pearls, and Aayaat
+        will remain safely stored in your cloud database.
+      </p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button type="button" id="btn-cancel-logout" class="option-btn"
+          style="flex: 1; padding: 10px 14px; font-weight: 600; cursor: pointer; background: #f3f4f6;">
+          Stay Logged In
+        </button>
+        <button type="button" id="btn-confirm-logout" class="btn-next-question"
+          style="flex: 1; margin: 0; background: #EF4444; padding: 10px 14px; cursor: pointer;">
+          Yes, Sign Out
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <script src="src/js/questions.js?v=11.0"></script>
+  <script src="src/js/audio.js?v=11.0"></script>
+  <script src="src/js/supabase-client.js?v=12.0"></script>
+  <script src="src/js/quran_app.js?v=12.0"></script>
+</body>
+
+</html>
