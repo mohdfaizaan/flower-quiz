@@ -250,13 +250,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const aayaatCompleted = extractCompleted(p.aayaatul_progress);
 
         const totalCompleted = flowersCompleted + pearlsCompleted + aayaatCompleted;
-        const overallProgress = Math.round((flowersCompleted / 24) * 100);
+        
+        // Calculate max progress dynamically depending on which app they used
+        let maxProgress = 0;
+        let isGraduated = false;
+        
+        if (flowersCompleted > 0) {
+            maxProgress = Math.max(maxProgress, Math.round((flowersCompleted / 24) * 100));
+            if (flowersCompleted >= 24) isGraduated = true;
+        }
+        if (pearlsCompleted > 0) {
+            // Assuming 30 chapters for Pearls
+            maxProgress = Math.max(maxProgress, Math.round((pearlsCompleted / 30) * 100));
+            if (pearlsCompleted >= 30) isGraduated = true;
+        }
+        if (aayaatCompleted > 0) {
+            // Assuming 30 modules for Aayaat
+            maxProgress = Math.max(maxProgress, Math.round((aayaatCompleted / 30) * 100));
+            if (aayaatCompleted >= 30) isGraduated = true;
+        }
+
+        const overallProgress = Math.min(maxProgress, 100);
 
         if (totalCompleted > 0) activeCount++;
-        if (flowersCompleted >= 24) completedCount++;
+        if (isGraduated) completedCount++;
 
         let status = 'New';
-        if (flowersCompleted >= 24) status = 'Graduated';
+        if (isGraduated) status = 'Graduated';
         else if (totalCompleted > 0) status = 'Active';
 
         // Detect login source from phone / email domain

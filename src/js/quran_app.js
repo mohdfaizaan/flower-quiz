@@ -804,27 +804,26 @@ class FlowersOfQuranApp {
 
     // --- ADD CERTIFICATE MODULE ---
     const allCompleted = this.state.completedFlowers.length === 24;
-    const certCard = document.createElement('div');
-    certCard.className = `section-card ${allCompleted ? 'completed' : 'locked'}`;
     
-    let certStatusIcon = allCompleted ? '🏆' : '🔒';
-    let certStatusBadge = allCompleted 
-      ? `<span class="status-badge-bottom done" style="background:#10B981;">Claim Certificate</span>`
-      : `<span class="status-badge-bottom lock">Locked</span>`;
+    if (allCompleted) {
+      const certCard = document.createElement('div');
+      certCard.className = `section-card completed`;
+      
+      let certStatusIcon = '🏆';
+      let certStatusBadge = `<span class="status-badge-bottom done" style="background:#10B981;">Claim Certificate</span>`;
 
-    certCard.innerHTML = `
-      <span class="section-badge-num">Achievement</span>
-      <span class="status-icon">${certStatusIcon}</span>
-      <div class="section-icon-wrapper" style="border: 2px solid #E5E7EB; padding: 12px; border-radius: 50%;">
-        <span style="font-size: 2.2rem;">📜</span>
-      </div>
-      <div class="section-card-title">Course Certificate</div>
-      <div class="section-card-sub">Complete all 24 Flowers</div>
-      ${certStatusBadge}
-    `;
+      certCard.innerHTML = `
+        <span class="section-badge-num">Achievement</span>
+        <span class="status-icon">${certStatusIcon}</span>
+        <div class="section-icon-wrapper" style="border: 2px solid #E5E7EB; padding: 12px; border-radius: 50%;">
+          <span style="font-size: 2.2rem;">📜</span>
+        </div>
+        <div class="section-card-title">Course Certificate</div>
+        <div class="section-card-sub">Complete all 24 Flowers</div>
+        ${certStatusBadge}
+      `;
 
-    certCard.addEventListener('click', () => {
-      if (allCompleted) {
+      certCard.addEventListener('click', () => {
         if (this.certificateModal) {
           const previewNameEl = document.getElementById('cert-preview-name');
           if (previewNameEl) {
@@ -844,12 +843,10 @@ class FlowersOfQuranApp {
           }
           this.certificateModal.classList.add('active');
         }
-      } else {
-        this.audio.playWrong();
-      }
-    });
+      });
 
-    this.sectionsGrid.appendChild(certCard);
+      this.sectionsGrid.appendChild(certCard);
+    }
   }
 
   downloadCertificatePdf() {
