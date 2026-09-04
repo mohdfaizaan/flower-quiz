@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // App progress extractions (supports all formats)
         const flowersCompleted = extractCompleted(p.flowers_progress);
         const pearlsCompleted = extractCompleted(p.pearls_progress);
-        const aayaatCompleted = extractCompleted(p.aayaatul_progress);
+        const aayaatCompleted = extractCompleted(p.aayaat_progress);
 
         const totalCompleted = flowersCompleted + pearlsCompleted + aayaatCompleted;
         
@@ -265,9 +265,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pearlsCompleted >= 30) isGraduated = true;
         }
         if (aayaatCompleted > 0) {
-            // Assuming 30 modules for Aayaat
-            maxProgress = Math.max(maxProgress, Math.round((aayaatCompleted / 30) * 100));
-            if (aayaatCompleted >= 30) isGraduated = true;
+            // Assuming 50 modules for Aayaat
+            maxProgress = Math.max(maxProgress, Math.round((aayaatCompleted / 50) * 100));
+            if (aayaatCompleted >= 50) isGraduated = true;
         }
 
         const overallProgress = Math.min(maxProgress, 100);
@@ -427,9 +427,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const contactInfo = user.phone !== 'N/A' ? user.phone : user.email;
       let statusClass = user.status === 'New' ? 'ready' : 'done';
 
-      const flowersPct = Math.round((user.flowersCompleted / 24) * 100);
-      const pearlsPct = user.pearlsCompleted > 0 ? Math.round((user.pearlsCompleted / 24) * 100) : 0;
-      const aayaatPct = user.aayaatCompleted > 0 ? Math.round((user.aayaatCompleted / 24) * 100) : 0;
+      const flowersPct = Math.min(100, Math.round((user.flowersCompleted / 24) * 100));
+      const pearlsPct = user.pearlsCompleted > 0 ? Math.min(100, Math.round((user.pearlsCompleted / 30) * 100)) : 0;
+      const aayaatPct = user.aayaatCompleted > 0 ? Math.min(100, Math.round((user.aayaatCompleted / 50) * 100)) : 0;
 
       tr.innerHTML = `
         <td style="font-family:monospace; color:var(--text-muted);">${idx + 1}</td>
@@ -512,7 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Flowers progress
-    const flowersPct = Math.round((user.flowersCompleted / 24) * 100);
+    const flowersPct = Math.min(100, Math.round((user.flowersCompleted / 24) * 100));
     const elFlPct = document.getElementById('modal-flowers-pct');
     const elFlBar = document.getElementById('modal-flowers-bar');
     const elFlCnt = document.getElementById('modal-flowers-count');
@@ -521,7 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (elFlCnt) elFlCnt.textContent = user.flowersCompleted;
 
     // Pearls progress
-    const pearlsPct = user.pearlsCompleted > 0 ? Math.round((user.pearlsCompleted / 24) * 100) : 0;
+    const pearlsPct = user.pearlsCompleted > 0 ? Math.min(100, Math.round((user.pearlsCompleted / 30) * 100)) : 0;
     const elPePct = document.getElementById('modal-pearls-pct');
     const elPeBar = document.getElementById('modal-pearls-bar');
     const elPeCnt = document.getElementById('modal-pearls-count');
@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (elPeCnt) elPeCnt.textContent = user.pearlsCompleted;
 
     // Aayaat progress
-    const aayaatPct = user.aayaatCompleted > 0 ? Math.round((user.aayaatCompleted / 24) * 100) : 0;
+    const aayaatPct = user.aayaatCompleted > 0 ? Math.min(100, Math.round((user.aayaatCompleted / 50) * 100)) : 0;
     const elAaPct = document.getElementById('modal-aayaat-pct');
     const elAaBar = document.getElementById('modal-aayaat-bar');
     const elAaCnt = document.getElementById('modal-aayaat-count');
