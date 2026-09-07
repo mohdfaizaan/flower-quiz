@@ -197,20 +197,31 @@ class FlowersOfQuranApp {
     }
   }
 
-  getPdfPath() {
-    return window.location.pathname.includes('/about/') ? '../assets/downloads/flowers_of_quran.pdf' : 'assets/downloads/flowers_of_quran.pdf';
+  getWebpImagePath(pageNum) {
+    let folderName = '';
+    if (this.currentPdfFlowerId === 24) {
+      folderName = '231-234';
+    } else {
+      let start = (this.currentPdfFlowerId - 1) * 10 + 1;
+      let end = this.currentPdfFlowerId * 10;
+      folderName = `${start}-${end}`;
+    }
+
+    let fileName = '';
+    if (pageNum <= 10) {
+      fileName = `flowers_of_quran_page_${pageNum.toString().padStart(2, '0')}.webp`;
+    } else {
+      fileName = `flowers_of_quran_page_${pageNum.toString().padStart(3, '0')}.webp`;
+    }
+
+    const basePath = window.location.pathname.includes('/about/') 
+      ? '../assets/downloads/flowers_of_quran_pages_011-234_webp/' 
+      : 'assets/downloads/flowers_of_quran_pages_011-234_webp/';
+    return `${basePath}${folderName}/${fileName}`;
   }
 
   initPdfLibrary() {
-    if (typeof pdfjsLib !== 'undefined') {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      pdfjsLib.getDocument(this.getPdfPath()).promise.then(doc => {
-        this.pdfDoc = doc;
-        console.log('📖 flowers_of_quran.pdf loaded successfully. Total pages:', doc.numPages);
-      }).catch(err => {
-        console.log('PDF loading notice:', err);
-      });
-    }
+    // PDF.js is no longer used, image viewer replaces it.
   }
 
   initCloudAuth() {
@@ -668,16 +679,17 @@ class FlowersOfQuranApp {
     if (!this.pdfCanvas) return;
 
     if (this.pdfCurrentPageEl) this.pdfCurrentPageEl.textContent = pageNum;
-    if (this.pdfTotalPageEl) this.pdfTotalPageEl.textContent = `${this.pdfPageEnd} (Pages ${this.pdfPageStart}-${this.pdfPageEnd})`;
+    if (this.pdfTotalPageEl) this.pdfTotalPageEl.textContent = `${this.pdfPageEnd}`;
     if (this.btnPdfPrev) this.btnPdfPrev.disabled = (pageNum <= this.pdfPageStart);
     if (this.btnPdfNext) this.btnPdfNext.disabled = (pageNum >= this.pdfPageEnd);
 
-    // Only reveal "Proceed to Quiz" button on the last (10th) page of the PDF section
-    const isFinalPage = (pageNum >= this.pdfPageEnd || (this.pdfDoc && pageNum >= this.pdfDoc.numPages));
+    // Only reveal "Proceed to Quiz" button on the last page of the section
+    const isFinalPage = (pageNum >= this.pdfPageEnd);
     if (isFinalPage) {
       if (this.pdfReadHint) this.pdfReadHint.style.display = 'none';
       if (this.btnProceedQuiz) {
         this.btnProceedQuiz.classList.add('visible');
+        this.btnProceedQuiz.style.display = 'inline-flex';
       }
     } else {
       if (this.pdfReadHint) this.pdfReadHint.style.display = 'inline-flex';
@@ -687,29 +699,21 @@ class FlowersOfQuranApp {
       }
     }
 
-    if (!this.pdfDoc) {
-      // If PDF.js doc not ready yet, attempt to reload
-      if (typeof pdfjsLib !== 'undefined') {
-        try {
-          if (this.pdfLoadingSpinner) this.pdfLoadingSpinner.style.display = 'block';
-          this.pdfDoc = await pdfjsLib.getDocument(this.getPdfPath()).promise;
-        } catch (e) {
-          console.log('PDF loading error:', e);
-        }
-      }
-    }
-
-    if (!this.pdfDoc) {
-      if (this.pdfLoadingSpinner) {
-        this.pdfLoadingSpinner.style.display = 'block';
-        this.pdfLoadingSpinner.innerHTML = `<i class="fa-solid fa-book-open"></i> Ready to study Flower ${this.currentPdfFlowerId} material. Click <b>Proceed to Quiz</b> when ready!`;
-      }
-      return;
+    if (this.pdfLoadingSpinner) {
+      this.pdfLoadingSpinner.style.display = 'none';
     }
 
     try {
+      const imgPath = this.getWebpImagePath(pageNum);
+      const img = new Image();
+      img.src = imgPath;
+
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+
       if (this.pdfLoadingSpinner) this.pdfLoadingSpinner.style.display = 'none';
-      const page = await this.pdfDoc.getPage(Math.min(pageNum, this.pdfDoc.numPages));
       
       const viewerBody = document.querySelector('.pdf-viewer-body');
       const maxH = viewerBody ? (viewerBody.clientHeight - 16) : (window.innerHeight * 0.62);
@@ -720,37 +724,39 @@ class FlowersOfQuranApp {
         viewerBody.style.overflow = (this.pdfZoomPercent > 100) ? 'auto' : 'hidden';
       }
 
-      const unscaledViewport = page.getViewport({ scale: 1.0 });
-      const scaleHeight = maxH / unscaledViewport.height;
-      const scaleWidth = maxW / unscaledViewport.width;
+      const scaleHeight = maxH / img.height;
+      const scaleWidth = maxW / img.width;
       const baseFitScale = Math.min(scaleHeight, scaleWidth, 1.25);
       const zoomMultiplier = (this.pdfZoomPercent || 100) / 100;
       const finalDisplayScale = baseFitScale * zoomMultiplier;
 
       // ULTRA-SHARP HD / RETINA RENDERING:
-      // Render internal canvas at 2x+ DPI device resolution and style to display size
       const dpr = Math.max(window.devicePixelRatio || 1, 2.0);
-      const viewport = page.getViewport({ scale: finalDisplayScale });
+      const drawWidth = img.width * finalDisplayScale;
+      const drawHeight = img.height * finalDisplayScale;
 
-      this.pdfCanvas.width = Math.floor(viewport.width * dpr);
-      this.pdfCanvas.height = Math.floor(viewport.height * dpr);
-      this.pdfCanvas.style.width = Math.floor(viewport.width) + "px";
-      this.pdfCanvas.style.height = Math.floor(viewport.height) + "px";
+      this.pdfCanvas.width = Math.floor(drawWidth * dpr);
+      this.pdfCanvas.height = Math.floor(drawHeight * dpr);
+      this.pdfCanvas.style.width = Math.floor(drawWidth) + "px";
+      this.pdfCanvas.style.height = Math.floor(drawHeight) + "px";
 
       const context = this.pdfCanvas.getContext('2d', { alpha: false });
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = 'high';
-
-      const transform = dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null;
-
-      const renderContext = {
-        canvasContext: context,
-        transform: transform,
-        viewport: viewport
-      };
-      await page.render(renderContext).promise;
+      
+      if (dpr !== 1) {
+        context.scale(dpr, dpr);
+      }
+      
+      // Draw a white background first, in case of transparency or sub-pixel rendering edges
+      context.fillStyle = 'white';
+      context.fillRect(0, 0, drawWidth, drawHeight);
+      context.drawImage(img, 0, 0, drawWidth, drawHeight);
     } catch (err) {
-      console.log('Error rendering PDF page:', err);
+      console.log('Error rendering image page:', err);
+      if (this.pdfLoadingSpinner) {
+        this.pdfLoadingSpinner.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error loading page ${pageNum}.`;
+      }
     }
   }
 
@@ -803,7 +809,7 @@ class FlowersOfQuranApp {
     });
 
     // --- ADD CERTIFICATE MODULE ---
-    const allCompleted = this.state.completedFlowers.length === 24;
+    const allCompleted = this.state.completedFlowers.length >= this.dataset.length;
     
     if (allCompleted) {
       const certCard = document.createElement('div');
