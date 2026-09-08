@@ -18,10 +18,42 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="src/css/style.css?v=11.0">
+  <link rel="stylesheet" href="src/css/style.css?v=15.0">
 
   <!-- Supabase JS Client v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Complete removal of scrollbars on all floating pages & modals -->
+  <style>
+    .modal-card,
+    .modal-overlay,
+    .modal-body,
+    .pdf-reader-card,
+    .intl-dropdown-popover,
+    .intl-country-list,
+    .intl-quick-chips-scroll,
+    div[class*="modal"],
+    div[id*="modal"] {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    .modal-card::-webkit-scrollbar,
+    .modal-overlay::-webkit-scrollbar,
+    .modal-body::-webkit-scrollbar,
+    .pdf-reader-card::-webkit-scrollbar,
+    .intl-dropdown-popover::-webkit-scrollbar,
+    .intl-country-list::-webkit-scrollbar,
+    .intl-quick-chips-scroll::-webkit-scrollbar,
+    div[class*="modal"]::-webkit-scrollbar,
+    div[id*="modal"]::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: transparent !important;
+      -webkit-appearance: none !important;
+    }
+  </style>
 </head>
 
 <body>
@@ -68,14 +100,14 @@
 
           <h1 class="hero-main-title">Enter the Garden of the Quran,<br>Discover Its Beautiful Flowers.</h1>
           <p class="hero-description">
-            Welcome to “Flowers of the Quran” — a special place for children to discover, understand,
+            Welcome to “Flowers of the Quran” — a special garden for children to discover, understand,
             and follow the beautiful and meaningful teachings of the Quran.
           </p>
 
           <!-- Bottom Left Action Area -->
           <div class="hero-action-area">
             <button class="btn-hero-start" id="btn-start-quiz">
-              Start Quiz ➔
+              Start Learning ➔
             </button>
             <span class="hero-note">🌸 24 Blooming Levels • 72 Quizzes</span>
           </div>
@@ -97,6 +129,14 @@
               <div class="step-card"><b>3</b><i class="fa-solid fa-list-check"></i><span>Quiz</span></div>
               <div class="step-card"><b>4</b><i class="fa-solid fa-award"></i><span>Reward</span></div>
             </div>
+          </div>
+          
+          <!-- Image added below mini board -->
+          <div style="position: relative; display: inline-block; width: 100%; margin-top: 20px;">
+            <img src="assets/images/flowers-of-quran.svg" alt="Flowers of Quran Competition" class="hero-mockup-img" id="competition-img" style="cursor: pointer; width: 100%; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);" />
+            <a href="pages/competition-form.html" style="position: absolute; bottom: 15px; right: 15px; background: white; color: #d97706; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: transform 0.2s, box-shadow 0.2s; z-index: 10; font-family: var(--font-body);" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)';">
+              Know more ➔
+            </a>
           </div>
         </div>
 
@@ -128,7 +168,7 @@
         <!-- Stat 4 -->
         <div class="stat-box">
           <div class="stat-number">100%</div>
-          <div class="stat-label">Kid Friendly</div>
+          <div class="stat-label">Authentic & Kids Friendly</div>
         </div>
 
       </div>
@@ -167,7 +207,7 @@
             <span class="footer-title">Flowers of Quran</span>
           </div>
           <p class="footer-about-text">
-            Welcome to "Flowers of the Quran" — a special place for children to discover, understand, and follow the
+            Welcome to "Flowers of the Quran" — a special garden for children to discover, understand, and follow the
             beautiful and meaningful teachings of the Quran.
           </p>
         </div>
@@ -447,15 +487,15 @@
 
   <!-- Login / Register Modal -->
   <div class="modal-overlay" id="login-modal">
-    <div class="modal-card" style="max-width: 440px;">
-      <div class="modal-header">
+    <div class="modal-card" style="max-width: 470px;">
+      <div class="modal-header" style="padding: 14px 20px;">
         <button class="btn-close-modal" id="btn-close-login">✕</button>
-        <div style="font-size: 3rem; margin-bottom: 4px;">📱</div>
-        <h2 style="font-family: var(--font-heading); font-size: 1.6rem; color: #fff;" id="modal-auth-title">Sign In /
+        <div style="font-size: 2.3rem; margin-bottom: 2px;">📱</div>
+        <h2 style="font-family: var(--font-heading); font-size: 1.45rem; color: #fff;" id="modal-auth-title">Sign In /
           Register</h2>
       </div>
 
-      <div class="modal-body" style="padding: 24px;">
+      <div class="modal-body" style="padding: 18px 22px;">
         <!-- Auth Mode Switch Tabs -->
         <div class="auth-tabs">
           <button type="button" id="tab-auth-login" class="auth-tab-btn active">Sign In</button>
@@ -471,52 +511,63 @@
           <div id="field-auth-name" class="register-only-field"
             style="display: none; margin-bottom: 12px; text-align: left;">
             <label style="display:block; font-weight:700; margin-bottom:5px; font-size:0.9rem;">Full Name</label>
-            <input type="text" id="auth-name" class="option-btn" style="width:100%; cursor:text; padding:10px 14px;"
+            <input type="text" id="auth-name" class="option-btn" style="width:100%; cursor:text; padding:10px 14px; text-transform: uppercase;"
               placeholder="Full Name">
           </div>
 
-          <!-- Phone Number Field -->
-          <div id="field-auth-phone" style="margin-bottom: 14px; text-align: left;">
-            <label style="display:block; font-weight:700; margin-bottom:5px; font-size:0.9rem;">Phone Number</label>
-            <div style="display: flex; gap: 8px;">
-              <select id="auth-country-code" class="option-btn"
-                style="width: 115px; cursor: pointer; padding: 10px 8px; font-weight: 700; background: #fff; font-size: 0.9rem;">
-                <option value="+91" selected>🇮🇳 +91</option>
-                <option value="+1">🇺🇸 +1</option>
-                <option value="+44">🇬🇧 +44</option>
-                <option value="+971">🇦🇪 +971</option>
-                <option value="+966">🇸🇦 +966</option>
-                <option value="+880">🇧🇩 +880</option>
-                <option value="+60">🇲🇾 +60</option>
-                <option value="+62">🇮🇩 +62</option>
-                <option value="+90">🇹🇷 +90</option>
-              </select>
-              <input type="tel" id="auth-phone-num" class="option-btn"
-                style="flex: 1; cursor: text; padding: 10px 14px; font-size: 1rem; font-weight: 600;"
-                placeholder="9876543210" maxlength="10" required>
+          <!-- International Phone Number Field: [+] [Country Code] and [Phone Number] -->
+          <div id="field-auth-phone" class="intl-phone-container" style="margin-bottom: 14px; text-align: left;">
+            <div class="intl-phone-header">
+              <label for="auth-phone-num" class="intl-phone-label">
+                <span>📱</span> Mobile Number
+              </label>
+              <span class="intl-badge-tag"><i class="fa-solid fa-earth-americas"></i> International</span>
             </div>
-            <small style="color: #6B7280; font-size: 0.78rem; display: block; margin-top: 4px;"
-              id="phone-hint-text">Enter 10-digit mobile number</small>
-          </div>
 
-          <!-- Register Only Field: Age -->
-          <div id="field-auth-age" class="register-only-field"
-            style="display: none; margin-bottom: 12px; text-align: left;">
-            <label style="display:block; font-weight:700; margin-bottom:5px; font-size:0.9rem;">Age</label>
-            <input type="number" id="auth-age" class="option-btn" style="width:100%; cursor:text; padding:10px 14px;"
-              placeholder="Age (e.g. 10)" min="3" max="100">
-          </div>
+            <!-- Two-part Direct Phone Input Group -->
+            <div class="direct-phone-group" id="intl-input-group">
+              <div class="country-code-wrap">
+                <span class="plus-addon">+</span>
+                <input type="tel" id="auth-country-code-input" class="country-code-box"
+                  placeholder="91" value="91" maxlength="4" autocomplete="tel-country-code" title="Enter country calling code (e.g. 91, 971, 1)">
+              </div>
+              <input type="tel" id="auth-phone-num" class="phone-number-box"
+                placeholder="Mobile number" maxlength="15" autocomplete="tel-national" required>
+            </div>
 
-          <!-- Register Only Field: Gender -->
-          <div id="field-auth-gender" class="register-only-field"
-            style="display: none; margin-bottom: 16px; text-align: left;">
-            <label style="display:block; font-weight:700; margin-bottom:5px; font-size:0.9rem;">Gender</label>
-            <select id="auth-gender" class="option-btn"
-              style="width:100%; cursor:pointer; padding:10px 14px; background:#fff;">
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
+            <!-- Hidden native select kept for compatibility -->
+            <select id="auth-country-code" style="display: none;" tabindex="-1" aria-hidden="true">
+              <option value="+91" selected>+91</option>
             </select>
+          </div>
+
+          <!-- Register Only Field: Email Address (Optional) -->
+          <div id="field-auth-email" class="register-only-field"
+            style="display: none; margin-bottom: 12px; text-align: left;">
+            <label style="display:flex; justify-content:space-between; align-items:center; font-weight:700; margin-bottom:5px; font-size:0.9rem;">
+              <span>📧 Email Address</span>
+              <span style="font-size:0.75rem; color:#6b7280; font-weight:600; background:#f3f4f6; padding:1px 6px; border-radius:4px;">Optional</span>
+            </label>
+            <input type="email" id="auth-email" class="option-btn" style="width:100%; cursor:text; padding:10px 14px;"
+              placeholder="name@example.com (optional)">
+          </div>
+
+          <!-- Register Only Row: Age & Gender side-by-side -->
+          <div class="register-only-field" id="row-auth-age-gender" style="display: none; gap: 10px; margin-bottom: 12px; text-align: left;">
+            <div id="field-auth-age" style="flex: 1;">
+              <label style="display:block; font-weight:700; margin-bottom:4px; font-size:0.88rem;">Age</label>
+              <input type="number" id="auth-age" class="option-btn" style="width:100%; cursor:text; padding:9px 12px;"
+                placeholder="Age (e.g. 10)" min="3" max="100">
+            </div>
+            <div id="field-auth-gender" style="flex: 1.2;">
+              <label style="display:block; font-weight:700; margin-bottom:4px; font-size:0.88rem;">Gender</label>
+              <select id="auth-gender" class="option-btn"
+                style="width:100%; cursor:pointer; padding:9px 12px; background:#fff;">
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
           </div>
 
           <!-- Access Submit Button -->
@@ -558,12 +609,102 @@
     </div>
   </div>
 
+  <!-- Guest Warning Modal -->
+  <div class="modal-overlay" id="guest-warning-modal">
+    <div class="modal-card" style="max-width: 420px; text-align: center; padding: 28px 22px;">
+      <div style="font-size: 2.8rem; margin-bottom: 8px;">⚠️</div>
+      <h3 style="font-family: var(--font-heading); font-size: 1.4rem; margin-bottom: 8px; color: #111;">Progress Not Saved!</h3>
+      <p style="font-size: 0.95rem; color: #555; line-height: 1.5; margin-bottom: 22px;">
+        You are currently exploring as a guest. Your quiz progress and unlocked flowers will not be saved. Register or log in to keep your progress!
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 10px; justify-content: center;">
+        <button type="button" id="btn-guest-login" class="btn-next-question" style="margin: 0; padding: 10px 14px; cursor: pointer;">
+          Log In / Register
+        </button>
+        <button type="button" id="btn-guest-continue" class="option-btn" style="padding: 10px 14px; font-weight: 600; cursor: pointer; background: #f3f4f6;">
+          Continue as Guest
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Competition Modal -->
+  <div class="modal-overlay" id="competition-modal">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <button class="btn-close-modal" id="btn-close-competition">✖</button>
+        <div style="font-size: 3rem; margin-bottom: 4px;">🏆</div>
+        <h2 style="font-family: var(--font-heading); font-size: 1.6rem; color: #fff;">Competition Details</h2>
+      </div>
+      <div class="modal-body" style="padding: 24px; text-align: left; line-height: 1.6;">
+        <h3 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--gold-dark); margin-bottom: 10px; font-weight: 700;">
+          Thank you for your interest in joining the ‘Flowers of Quran’ Competition! 🌸
+        </h3>
+        <p style="margin-bottom: 14px; color: #4B5563;">
+          To participate, please complete the following steps:
+        </p>
+        <ol style="margin-bottom: 14px; color: #4B5563; padding-left: 20px;">
+          <li style="margin-bottom: 8px;">Register online for the ‘Flowers of Quran’ course.</li>
+          <li style="margin-bottom: 8px;">Study all 234 Flowers of Quran carefully.</li>
+          <li style="margin-bottom: 8px;">Complete the course and obtain your Certificate of Completion.</li>
+          <li style="margin-bottom: 8px;">Submit your request to join the competition through the competition portal.</li>
+          <li style="margin-bottom: 8px;">Be available online at the scheduled date and time of the competition.</li>
+        </ol>
+
+        <!-- Bottom Right Action: Fill out the form to join button -->
+        <div style="display: flex; justify-content: flex-end; margin-top: 20px; padding-top: 14px; border-top: 1px solid #f3f4f6;">
+          <a href="pages/competition-form.html" class="btn-next-question" id="btn-goto-competition-form"
+            style="text-decoration: none; margin: 0; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; padding: 12px 22px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35); color: #fff; cursor: pointer; font-size: 0.95rem;">
+            Fill out the form to join ➔
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const compImg = document.getElementById('competition-img');
+      const compModal = document.getElementById('competition-modal');
+      const closeComp = document.getElementById('btn-close-competition');
+      
+      if(compImg && compModal) {
+        compImg.addEventListener('click', () => {
+          compModal.classList.add('active');
+        });
+      }
+      
+      if(closeComp && compModal) {
+        closeComp.addEventListener('click', () => {
+          compModal.classList.remove('active');
+        });
+      }
+      
+      if(compModal) {
+        compModal.addEventListener('click', (e) => {
+          if (e.target === compModal) {
+            compModal.classList.remove('active');
+          }
+        });
+      }
+    });
+  </script>
+
+  <!-- Toast Notification -->
+  <div id="toast-notification" class="toast-notification">
+    <div class="toast-icon">✨</div>
+    <div class="toast-content">
+      <h4 id="toast-title">Success</h4>
+      <p id="toast-message">Logged in successfully.</p>
+    </div>
+  </div>
+
   <canvas id="confetti-canvas"></canvas>
 
   <script src="src/js/questions.js?v=11.0"></script>
   <script src="src/js/audio.js?v=11.0"></script>
   <script src="src/js/supabase-client.js?v=12.0"></script>
-  <script src="src/js/quran_app.js?v=12.0"></script>
+  <script src="src/js/quran_app.js?v=15.0"></script>
 </body>
 
 </html>

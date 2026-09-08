@@ -355,3 +355,19 @@
   background: var(--gold-primary);
   color: #FFF;
 }
+
+/* Hide scrollbars in floating modals and cards */
+.modal-card,
+.modal-body,
+.modal-overlay {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.modal-card::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar,
+.modal-overlay::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

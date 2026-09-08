@@ -58,7 +58,12 @@ class FlowersOfQuranApp {
     this.fieldAuthName = document.getElementById('field-auth-name');
     this.fieldAuthAge = document.getElementById('field-auth-age');
     this.fieldAuthGender = document.getElementById('field-auth-gender');
+    this.fieldAuthEmail = document.getElementById('field-auth-email');
     this.authNameInput = document.getElementById('auth-name');
+    this.authAgeInput = document.getElementById('auth-age');
+    this.authGenderInput = document.getElementById('auth-gender');
+    this.authEmailInput = document.getElementById('auth-email');
+    this.authCountryCodeInput = document.getElementById('auth-country-code-input');
     this.authCountryCode = document.getElementById('auth-country-code');
     this.authPhoneNumInput = document.getElementById('auth-phone-num');
     this.phoneHintText = document.getElementById('phone-hint-text');
@@ -125,8 +130,28 @@ class FlowersOfQuranApp {
     this.btnCloseCertificate = document.getElementById('btn-close-certificate');
     this.btnDownloadPdfCert = document.getElementById('btn-download-pdf-cert');
 
+    // Toast Notification
+    this.toastNotification = document.getElementById('toast-notification');
+    this.toastTitle = document.getElementById('toast-title');
+    this.toastMessage = document.getElementById('toast-message');
+
+    // Guest Warning
+    this.guestWarningModal = document.getElementById('guest-warning-modal');
+    this.btnGuestLogin = document.getElementById('btn-guest-login');
+    this.btnGuestContinue = document.getElementById('btn-guest-continue');
+
     this.applyCachedAuthState();
     this.init();
+  }
+
+  showToast(title, message) {
+    if (!this.toastNotification) return;
+    if (this.toastTitle) this.toastTitle.textContent = title;
+    if (this.toastMessage) this.toastMessage.textContent = message;
+    this.toastNotification.classList.add('show');
+    setTimeout(() => {
+      this.toastNotification.classList.remove('show');
+    }, 4000);
   }
 
   applyCachedAuthState() {
@@ -380,6 +405,21 @@ class FlowersOfQuranApp {
     }
 
 
+    if (this.btnGuestLogin) {
+      this.btnGuestLogin.addEventListener('click', () => {
+        if (this.guestWarningModal) this.guestWarningModal.classList.remove('active');
+        this.setAuthMode('login');
+        if (this.loginModal) this.loginModal.classList.add('active');
+      });
+    }
+
+    if (this.btnGuestContinue) {
+      this.btnGuestContinue.addEventListener('click', () => {
+        if (this.guestWarningModal) this.guestWarningModal.classList.remove('active');
+        this.openPdfReader(1);
+      });
+    }
+
     if (this.btnCloseCertificate) {
       this.btnCloseCertificate.addEventListener('click', () => {
         if (this.certificateModal) this.certificateModal.classList.remove('active');
@@ -415,24 +455,22 @@ class FlowersOfQuranApp {
       });
     }
 
-    // Country Code Change Hint Listener
-    if (this.authCountryCode) {
-      this.authCountryCode.addEventListener('change', () => {
-        const val = this.authCountryCode.value;
-        if (this.authPhoneNumInput) {
-          this.authPhoneNumInput.placeholder = "10-digit number";
-          this.authPhoneNumInput.maxLength = 10;
-        }
-        if (this.phoneHintText) this.phoneHintText.textContent = `Enter 10-digit mobile number for ${val}`;
-      });
-    }
+    // International Phone Input & Country Code Highlighting
+    this.setupInternationalPhoneInput();
 
     // Direct Submit Handler
     if (this.btnSubmitPhoneAuth) {
       this.btnSubmitPhoneAuth.addEventListener('click', async () => {
-        const countryCode = this.authCountryCode ? this.authCountryCode.value : '+91';
+        let countryCode = '+91';
+        if (this.authCountryCodeInput && this.authCountryCodeInput.value.trim()) {
+          const rawCode = this.authCountryCodeInput.value.trim().replace(/\D/g, '');
+          if (rawCode) countryCode = '+' + rawCode;
+        } else if (this.authCountryCode) {
+          countryCode = this.authCountryCode.value;
+        }
         const phoneNum = this.authPhoneNumInput ? this.authPhoneNumInput.value.trim() : '';
-        const name = this.authNameInput ? this.authNameInput.value.trim() : '';
+        const name = this.authNameInput ? this.authNameInput.value.trim().toUpperCase() : '';
+        const email = this.authEmailInput ? this.authEmailInput.value.trim() : '';
         const age = this.authAgeInput ? this.authAgeInput.value.trim() : '';
         const gender = this.authGenderInput ? this.authGenderInput.value.trim() : '';
 
@@ -456,12 +494,14 @@ class FlowersOfQuranApp {
         this.btnSubmitPhoneAuth.textContent = "Connecting...";
 
         try {
-          const userObj = await this.cloud.loginWithPhone(countryCode, phoneNum, { name, age, gender }, this.authMode);
+          const userObj = await this.cloud.loginWithPhone(countryCode, phoneNum, { name, email, age, gender }, this.authMode);
           if (this.authSuccessMsg) {
             this.authSuccessMsg.textContent = `✅ Welcome ${userObj.user_metadata.name || userObj.phone}! Access granted.`;
             this.authSuccessMsg.style.display = 'block';
           }
           if (this.authErrorMsg) this.authErrorMsg.style.display = 'none';
+          
+          this.showToast('Success', `Welcome ${userObj.user_metadata.name || userObj.phone}!`);
 
           setTimeout(() => {
             if (this.loginModal) this.loginModal.classList.remove('active');
@@ -637,8 +677,9 @@ class FlowersOfQuranApp {
       if (this.tabAuthRegister) this.tabAuthRegister.classList.add('active');
       if (this.tabAuthLogin) this.tabAuthLogin.classList.remove('active');
       if (this.fieldAuthName) this.fieldAuthName.style.display = 'block';
-      if (this.fieldAuthAge) this.fieldAuthAge.style.display = 'block';
-      if (this.fieldAuthGender) this.fieldAuthGender.style.display = 'block';
+      if (this.fieldAuthEmail) this.fieldAuthEmail.style.display = 'block';
+      const rowAgeGender = document.getElementById('row-auth-age-gender');
+      if (rowAgeGender) rowAgeGender.style.display = 'flex';
       if (this.modalAuthTitle) this.modalAuthTitle.textContent = "Create Account";
       if (this.btnSubmitPhoneAuth) this.btnSubmitPhoneAuth.textContent = "Register & Get Access ➔";
     } else {
@@ -647,10 +688,61 @@ class FlowersOfQuranApp {
       if (this.tabAuthLogin) this.tabAuthLogin.classList.add('active');
       if (this.tabAuthRegister) this.tabAuthRegister.classList.remove('active');
       if (this.fieldAuthName) this.fieldAuthName.style.display = 'none';
-      if (this.fieldAuthAge) this.fieldAuthAge.style.display = 'none';
-      if (this.fieldAuthGender) this.fieldAuthGender.style.display = 'none';
+      if (this.fieldAuthEmail) this.fieldAuthEmail.style.display = 'none';
+      const rowAgeGender = document.getElementById('row-auth-age-gender');
+      if (rowAgeGender) rowAgeGender.style.display = 'none';
       if (this.modalAuthTitle) this.modalAuthTitle.textContent = "Sign In";
       if (this.btnSubmitPhoneAuth) this.btnSubmitPhoneAuth.textContent = "Sign In & Get Access ➔";
+    }
+  }
+
+  // --- DIRECT INTERNATIONAL PHONE INPUT (+ Country Code & Mobile Number) ---
+  setupInternationalPhoneInput() {
+    const codeInput = this.authCountryCodeInput;
+    const phoneInput = this.authPhoneNumInput;
+    const hiddenSelect = this.authCountryCode;
+
+    const syncCountryCode = (val) => {
+      let clean = String(val || '').trim().replace(/\D/g, '');
+      if (clean && !clean.startsWith('+')) clean = '+' + clean;
+      if (hiddenSelect) {
+        let opt = hiddenSelect.querySelector(`option[value="${clean}"]`);
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = clean;
+          opt.textContent = clean;
+          hiddenSelect.appendChild(opt);
+        }
+        hiddenSelect.value = clean;
+      }
+    };
+
+    if (codeInput) {
+      codeInput.addEventListener('input', () => {
+        let val = codeInput.value.replace(/\D/g, '');
+        codeInput.value = val;
+        syncCountryCode(val || '91');
+      });
+      syncCountryCode(codeInput.value || '91');
+    }
+
+    if (phoneInput) {
+      phoneInput.addEventListener('input', () => {
+        let val = phoneInput.value;
+        // Auto-detect country code if pasted with + or 00 (e.g. +971501234567 or +919876543210)
+        if (val.startsWith('+') || val.startsWith('00')) {
+          let cleanVal = val.startsWith('00') ? '+' + val.substring(2) : val;
+          const matched = cleanVal.match(/^\+(\d{1,4})(\d{6,12})$/);
+          if (matched && codeInput) {
+            codeInput.value = matched[1];
+            syncCountryCode(matched[1]);
+            phoneInput.value = matched[2];
+            return;
+          }
+        }
+        // Numbers only
+        phoneInput.value = val.replace(/\D/g, '');
+      });
     }
   }
 
@@ -798,8 +890,17 @@ class FlowersOfQuranApp {
 
       card.addEventListener('click', () => {
         if (isUnlocked) {
-          // Open 10-page PDF study reader before quiz!
-          this.openPdfReader(item.id);
+          if (item.id === 1 && !this.state.authUser && !sessionStorage.getItem('guest_warning_shown')) {
+            sessionStorage.setItem('guest_warning_shown', 'true');
+            if (this.guestWarningModal) {
+              this.guestWarningModal.classList.add('active');
+            } else {
+              this.openPdfReader(item.id);
+            }
+          } else {
+            // Open 10-page PDF study reader before quiz!
+            this.openPdfReader(item.id);
+          }
         } else {
           this.audio.playWrong();
         }

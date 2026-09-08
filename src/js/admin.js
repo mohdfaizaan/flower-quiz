@@ -1,556 +1,485 @@
-// admin.js - Aayaatul Quran Admin Panel (Multi-Panel + 3-App Progress + Realtime + Auto-Retry & Resilient Fetching)
+// Secure Flowers of Quran administrator dashboard.
+// The Supabase URL and anon key are public client configuration, not administrator credentials.
 
-document.addEventListener('DOMContentLoaded', () => {
-  // ── DOM References ──
-  const loginView = document.getElementById('admin-login-view');
-  const dashboardView = document.getElementById('admin-dashboard-view');
-  const loginForm = document.getElementById('admin-login-form');
-  const emailInput = document.getElementById('login-email');
-  const passwordInput = document.getElementById('login-password');
-  const errorMsg = document.getElementById('auth-error-msg');
-  const btnLogout = document.getElementById('btn-admin-logout');
+(() => {
+  'use strict';
 
-  // Refresh Buttons
-  const btnRefreshData = document.getElementById('btn-refresh-data');
-  const btnRefreshUsers = document.getElementById('btn-refresh-users');
+  const SUPABASE_URL = 'https://mpdpebcmdpozfsgukxww.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZHBlYmNtZHBvemZzZ3VreHd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA5NDksImV4cCI6MjEwMzMwNjk0OX0.vN4Gzpm5ritKLlL-lHKGd9fd6hwkcKR76Lb6ADduGGU';
+  const COURSE_TOTALS = Object.freeze({ flowers: 24, pearls: 36, aayaat: 50 });
 
-  // Panels
-  const panelDashboard = document.getElementById('panel-dashboard');
-  const panelUsers = document.getElementById('panel-users');
+  document.addEventListener('DOMContentLoaded', () => {
+    const elements = {
+      loginView: document.getElementById('admin-login-view'),
+      dashboardView: document.getElementById('admin-dashboard-view'),
+      loginForm: document.getElementById('admin-login-form'),
+      emailInput: document.getElementById('login-email'),
+      passwordInput: document.getElementById('login-password'),
+      loginButton: document.getElementById('btn-submit-login'),
+      authMessage: document.getElementById('auth-error-msg'),
+      logoutButton: document.getElementById('btn-admin-logout'),
+      refreshDashboard: document.getElementById('btn-refresh-data'),
+      refreshUsers: document.getElementById('btn-refresh-users'),
+      panelDashboard: document.getElementById('panel-dashboard'),
+      panelUsers: document.getElementById('panel-users'),
+      dashboardSearch: document.getElementById('user-search-input'),
+      usersSearch: document.getElementById('panel-users-search'),
+      dashboardTable: document.getElementById('users-table-body'),
+      usersTable: document.getElementById('panel-users-table-body'),
+      dashboardCount: document.getElementById('users-count-badge'),
+      usersCount: document.getElementById('panel-users-count-badge'),
+      totalUsers: document.getElementById('kpi-total-users'),
+      activeLearners: document.getElementById('kpi-active-learners'),
+      completedUsers: document.getElementById('kpi-completed-users'),
+      syncStatus: document.getElementById('kpi-total-trend'),
+      userModal: document.getElementById('user-details-modal'),
+      closeUserModal: document.getElementById('btn-close-user-modal')
+    };
 
-  // Dashboard table
-  const usersTableBody = document.getElementById('users-table-body');
-  const usersCountBadge = document.getElementById('users-count-badge');
-  const searchInput = document.getElementById('user-search-input');
+    let client = null;
+    let profiles = [];
+    let realtimeChannel = null;
+    let isAdministrator = false;
+    let isFetching = false;
 
-  // Full Users panel table
-  const panelUsersTableBody = document.getElementById('panel-users-table-body');
-  const panelUsersCountBadge = document.getElementById('panel-users-count-badge');
-  const panelUsersSearch = document.getElementById('panel-users-search');
-
-  // KPI
-  const kpiTotalUsers = document.getElementById('kpi-total-users');
-  const kpiActiveLearners = document.getElementById('kpi-active-learners');
-  const kpiCompletedUsers = document.getElementById('kpi-completed-users');
-  const kpiTotalTrend = document.getElementById('kpi-total-trend');
-
-  // Modal
-  const userModal = document.getElementById('user-details-modal');
-  const btnCloseModal = document.getElementById('btn-close-user-modal');
-
-  // ── State ──
-  let isAuthenticated = sessionStorage.getItem('adminAuth') === 'true';
-  let usersList = [];
-  let rawProfiles = [];
-  let supabaseClient = null;
-  let realtimeChannel = null;
-  let activePanel = 'dashboard';
-  let isFetching = false;
-
-  // ══════════════════════════════════════
-  //  SUPABASE INIT WITH AUTO-RETRY
-  // ══════════════════════════════════════
-  function initSupabase(retryCount = 0) {
-    if (supabaseClient) return supabaseClient;
-    try {
-      if (typeof window.supabase !== 'undefined') {
-        supabaseClient = window.supabase.createClient(
-          "https://mpdpebcmdpozfsgukxww.supabase.co",
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZHBlYmNtZHBvemZzZ3VreHd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA5NDksImV4cCI6MjEwMzMwNjk0OX0.vN4Gzpm5ritKLlL-lHKGd9fd6hwkcKR76Lb6ADduGGU"
-        );
-        console.log("✅ Supabase SDK ready.");
-        if (isAuthenticated) {
-          fetchRealUsers();
-          startRealtime();
-        }
-        return supabaseClient;
-      } else if (retryCount < 10) {
-        console.warn(`⏳ Waiting for Supabase SDK CDN... Attempt ${retryCount + 1}`);
-        setTimeout(() => initSupabase(retryCount + 1), 400);
-      } else {
-        console.error("❌ Supabase SDK CDN failed to load.");
-        if (kpiTotalTrend) kpiTotalTrend.textContent = "❌ SDK Load Error";
-      }
-    } catch (e) {
-      console.error("❌ Supabase init error:", e);
+    function setText(id, value) {
+      const element = document.getElementById(id);
+      if (element) element.textContent = value;
     }
-    return supabaseClient;
-  }
 
-  // ══════════════════════════════════════
-  //  SIDEBAR & PANEL SWITCHING
-  // ══════════════════════════════════════
-  const sidebarLinks = document.querySelectorAll('.sidebar-link:not(.logout-link)');
-
-  function switchPanel(panelName) {
-    activePanel = panelName;
-    panelDashboard.style.display = panelName === 'dashboard' ? 'block' : 'none';
-    panelUsers.style.display = panelName === 'users' ? 'block' : 'none';
-
-    sidebarLinks.forEach(l => l.classList.remove('active'));
-    if (panelName === 'dashboard') sidebarLinks[0]?.classList.add('active');
-    else if (panelName === 'users') sidebarLinks[1]?.classList.add('active');
-  }
-
-  sidebarLinks.forEach(link => {
-    link.addEventListener('click', () => {
-      const label = link.querySelector('span').textContent.trim();
-      if (label === 'Dashboard Overview') {
-        switchPanel('dashboard');
-      } else if (label === 'Registered Users') {
-        switchPanel('users');
-        renderFullUsersTable(usersList);
-      }
-    });
-  });
-
-  // ══════════════════════════════════════
-  //  LOGIN (Single Admin Only)
-  // ══════════════════════════════════════
-  const ADMIN_EMAIL = 'characterbee@gmail.com';
-  const ADMIN_PASSWORD = 'character';
-
-  loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const email = emailInput.value.trim().toLowerCase();
-    const password = passwordInput.value.trim();
-    errorMsg.style.display = 'none';
-
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      isAuthenticated = true;
-      sessionStorage.setItem('adminAuth', 'true');
-      updateView();
-    } else {
-      errorMsg.textContent = 'Access Denied. Only the admin account can sign in.';
-      errorMsg.style.display = 'block';
+    function showAuthMessage(message) {
+      if (!elements.authMessage) return;
+      elements.authMessage.textContent = message;
+      elements.authMessage.style.display = message ? 'block' : 'none';
     }
-  });
 
-  // ── Logout ──
-  btnLogout.addEventListener('click', () => {
-    isAuthenticated = false;
-    sessionStorage.removeItem('adminAuth');
-    usersList = [];
-    rawProfiles = [];
-    stopRealtime();
-    updateView();
-  });
+    function setLoginBusy(isBusy) {
+      if (elements.loginButton) {
+        elements.loginButton.disabled = isBusy;
+        elements.loginButton.textContent = isBusy ? 'Verifying…' : 'Sign In Securely ➔';
+      }
+      if (elements.emailInput) elements.emailInput.disabled = isBusy;
+      if (elements.passwordInput) elements.passwordInput.disabled = isBusy;
+    }
 
-  // ── Refresh Button Listeners ──
-  if (btnRefreshData) btnRefreshData.addEventListener('click', () => fetchRealUsers(true));
-  if (btnRefreshUsers) btnRefreshUsers.addEventListener('click', () => fetchRealUsers(true));
+    function showLogin(message = '') {
+      isAdministrator = false;
+      if (elements.loginView) elements.loginView.style.display = 'flex';
+      if (elements.dashboardView) elements.dashboardView.style.display = 'none';
+      if (elements.passwordInput) elements.passwordInput.value = '';
+      showAuthMessage(message);
+    }
 
-  // ── View Controller ──
-  function updateView() {
-    if (isAuthenticated) {
-      loginView.style.display = 'none';
-      dashboardView.style.display = 'flex';
+    function showDashboard() {
+      if (elements.loginView) elements.loginView.style.display = 'none';
+      if (elements.dashboardView) elements.dashboardView.style.display = 'flex';
+      showAuthMessage('');
       switchPanel('dashboard');
-      fetchRealUsers();
-      startRealtime();
-    } else {
-      loginView.style.display = 'flex';
-      dashboardView.style.display = 'none';
-      emailInput.value = '';
-      passwordInput.value = '';
-    }
-  }
-
-  // ══════════════════════════════════════
-  //  REALTIME SUBSCRIPTION
-  // ══════════════════════════════════════
-  function startRealtime() {
-    const client = initSupabase();
-    if (!client || realtimeChannel) return;
-    try {
-      realtimeChannel = client
-        .channel('admin-profiles-watch-v2')
-        .on('postgres_changes',
-          { event: '*', schema: 'public', table: 'profiles' },
-          (payload) => {
-            console.log('🔄 Realtime payload:', payload.eventType);
-            fetchRealUsers();
-          }
-        )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') console.log('🟢 Realtime active.');
-        });
-    } catch (e) {
-      console.warn("Realtime subscription note:", e);
-    }
-  }
-
-  function stopRealtime() {
-    if (realtimeChannel && supabaseClient) {
-      try {
-        supabaseClient.removeChannel(realtimeChannel);
-      } catch (e) { /* ok */ }
-      realtimeChannel = null;
-    }
-  }
-
-  // ══════════════════════════════════════
-  //  FETCH ALL PROFILES FROM SUPABASE
-  // ══════════════════════════════════════
-  async function fetchRealUsers(showSpin = false) {
-    if (isFetching) return;
-    const client = initSupabase();
-    if (!client) {
-      if (kpiTotalTrend) kpiTotalTrend.textContent = '❌ Connecting SDK...';
-      return;
     }
 
-    isFetching = true;
-    if (kpiTotalTrend) kpiTotalTrend.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
+    function switchPanel(panelName) {
+      if (!isAdministrator) return;
+      if (elements.panelDashboard) elements.panelDashboard.style.display = panelName === 'dashboard' ? 'block' : 'none';
+      if (elements.panelUsers) elements.panelUsers.style.display = panelName === 'users' ? 'block' : 'none';
 
-    // Animate refresh icons
-    const icons = document.querySelectorAll('.notification-btn i.fa-arrows-rotate');
-    icons.forEach(i => i.classList.add('fa-spin'));
+      const links = document.querySelectorAll('.sidebar-nav .sidebar-link');
+      links.forEach((link, index) => {
+        const isActive = (panelName === 'dashboard' && index === 0) || (panelName === 'users' && index === 1);
+        link.classList.toggle('active', isActive);
+      });
+    }
 
-    try {
-      const { data, error } = await client
-        .from('profiles')
-        .select('*')
-        .order('updated_at', { ascending: false });
+    function normaliseProgress(progress) {
+      if (!progress) return {};
+      if (typeof progress === 'string') {
+        try {
+          return JSON.parse(progress);
+        } catch (_) {
+          return {};
+        }
+      }
+      return typeof progress === 'object' ? progress : {};
+    }
 
-      if (error) {
-        console.error("Supabase fetch error:", error);
-        if (kpiTotalTrend) kpiTotalTrend.textContent = '❌ ' + error.message;
-        isFetching = false;
-        icons.forEach(i => i.classList.remove('fa-spin'));
+    function completedCount(progress) {
+      const value = normaliseProgress(progress);
+      const candidates = [value.completed, value.completedFlowers, value.completedPearls, value.completedAayaat];
+      for (const candidate of candidates) {
+        if (Array.isArray(candidate)) return new Set(candidate).size;
+        if (Number.isFinite(candidate)) return Math.max(0, Math.floor(candidate));
+      }
+      return 0;
+    }
+
+    function percent(count, total) {
+      return Math.min(100, Math.max(0, Math.round((count / total) * 100)));
+    }
+
+    function formatDate(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime())
+        ? '—'
+        : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function loginSource(profile) {
+      const phone = String(profile.phone || '');
+      const email = String(profile.email || '');
+      if (phone) return `Phone (${phone})`;
+      if (email) return `Email (${email.split('@')[1] || 'account'})`;
+      return 'Unknown';
+    }
+
+    function mapProfile(profile) {
+      const flowersCompleted = completedCount(profile.flowers_progress);
+      const pearlsCompleted = completedCount(profile.pearls_progress);
+      const aayaatCompleted = completedCount(profile.aayaat_progress);
+      const percentages = {
+        flowers: percent(flowersCompleted, COURSE_TOTALS.flowers),
+        pearls: percent(pearlsCompleted, COURSE_TOTALS.pearls),
+        aayaat: percent(aayaatCompleted, COURSE_TOTALS.aayaat)
+      };
+      const totalCompleted = flowersCompleted + pearlsCompleted + aayaatCompleted;
+      const graduated = flowersCompleted >= COURSE_TOTALS.flowers
+        || pearlsCompleted >= COURSE_TOTALS.pearls
+        || aayaatCompleted >= COURSE_TOTALS.aayaat;
+
+      return {
+        id: String(profile.id || '—'),
+        name: String(profile.name || ''),
+        phone: String(profile.phone || 'N/A'),
+        email: String(profile.email || 'N/A'),
+        age: profile.age ?? '—',
+        gender: String(profile.gender || '—'),
+        joinedDate: formatDate(profile.updated_at || profile.created_at),
+        status: graduated ? 'Graduated' : (totalCompleted > 0 ? 'Active' : 'New'),
+        overallProgress: Math.max(percentages.flowers, percentages.pearls, percentages.aayaat),
+        flowersCompleted,
+        pearlsCompleted,
+        aayaatCompleted,
+        percentages,
+        loginSource: loginSource(profile)
+      };
+    }
+
+    function displayName(user) {
+      if (user.name) return user.name;
+      if (user.phone !== 'N/A') return user.phone;
+      if (user.email !== 'N/A') return user.email.split('@')[0];
+      return 'Unknown';
+    }
+
+    function appendCell(row, text, className = '') {
+      const cell = document.createElement('td');
+      if (className) cell.className = className;
+      cell.textContent = String(text);
+      row.appendChild(cell);
+      return cell;
+    }
+
+    function appendProgressCell(row, value, colour) {
+      const cell = document.createElement('td');
+      const wrapper = document.createElement('div');
+      const background = document.createElement('div');
+      const fill = document.createElement('div');
+      const label = document.createElement('span');
+
+      wrapper.className = 'progress-cell';
+      background.className = 'progress-bar-bg';
+      fill.className = 'progress-bar-fill';
+      fill.style.width = `${value}%`;
+      fill.style.background = colour;
+      label.className = 'progress-text';
+      label.textContent = `${value}%`;
+
+      background.appendChild(fill);
+      wrapper.append(background, label);
+      cell.appendChild(wrapper);
+      row.appendChild(cell);
+    }
+
+    function appendStatusCell(row, status) {
+      const cell = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = `status-badge-bottom ${status === 'New' ? 'ready' : 'done'}`;
+      badge.textContent = status;
+      cell.appendChild(badge);
+      row.appendChild(cell);
+    }
+
+    function showEmptyRow(tableBody, columnCount, message) {
+      if (!tableBody) return;
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = columnCount;
+      cell.style.textAlign = 'center';
+      cell.style.padding = '30px 20px';
+      cell.style.color = 'var(--text-muted)';
+      cell.textContent = message;
+      row.appendChild(cell);
+      tableBody.appendChild(row);
+    }
+
+    function renderDashboardTable(users) {
+      if (!elements.dashboardTable) return;
+      elements.dashboardTable.replaceChildren();
+      if (elements.dashboardCount) elements.dashboardCount.textContent = `${users.length} Users`;
+
+      if (!users.length) {
+        showEmptyRow(elements.dashboardTable, 6, 'No matching user profiles found.');
         return;
       }
 
-      rawProfiles = data || [];
-      let activeCount = 0;
-      let completedCount = 0;
-
-      // Helper to safely extract completed count from any app module structure
-      function extractCompleted(obj) {
-        if (!obj) return 0;
-        if (Array.isArray(obj.completed)) return obj.completed.length;
-        if (Array.isArray(obj.completedFlowers)) return obj.completedFlowers.length;
-        if (Array.isArray(obj.completedPearls)) return obj.completedPearls.length;
-        if (Array.isArray(obj.completedAayaat)) return obj.completedAayaat.length;
-        if (typeof obj.completed === 'number') return obj.completed;
-        return 0;
-      }
-
-      function extractUnlocked(obj) {
-        if (!obj) return 0;
-        if (Array.isArray(obj.unlocked)) return obj.unlocked.length;
-        if (Array.isArray(obj.unlockedFlowers)) return obj.unlockedFlowers.length;
-        return 0;
-      }
-
-      usersList = rawProfiles.map(p => {
-        // App progress extractions (supports all formats)
-        const flowersCompleted = extractCompleted(p.flowers_progress);
-        const pearlsCompleted = extractCompleted(p.pearls_progress);
-        const aayaatCompleted = extractCompleted(p.aayaat_progress);
-
-        const totalCompleted = flowersCompleted + pearlsCompleted + aayaatCompleted;
-        
-        // Calculate max progress dynamically depending on which app they used
-        let maxProgress = 0;
-        let isGraduated = false;
-        
-        if (flowersCompleted > 0) {
-            maxProgress = Math.max(maxProgress, Math.round((flowersCompleted / 24) * 100));
-            if (flowersCompleted >= 24) isGraduated = true;
-        }
-        if (pearlsCompleted > 0) {
-            // Assuming 30 chapters for Pearls
-            maxProgress = Math.max(maxProgress, Math.round((pearlsCompleted / 30) * 100));
-            if (pearlsCompleted >= 30) isGraduated = true;
-        }
-        if (aayaatCompleted > 0) {
-            // Assuming 50 modules for Aayaat
-            maxProgress = Math.max(maxProgress, Math.round((aayaatCompleted / 50) * 100));
-            if (aayaatCompleted >= 50) isGraduated = true;
-        }
-
-        const overallProgress = Math.min(maxProgress, 100);
-
-        if (totalCompleted > 0) activeCount++;
-        if (isGraduated) completedCount++;
-
-        let status = 'New';
-        if (isGraduated) status = 'Graduated';
-        else if (totalCompleted > 0) status = 'Active';
-
-        // Detect login source from phone / email domain
-        let loginSource = 'Phone OTP Authentication';
-        const phone = p.phone || '';
-        const email = p.email || '';
-        if (phone) loginSource = 'Phone SMS OTP (' + phone + ')';
-        else if (email.includes('@gmail.com')) loginSource = 'Google (Gmail)';
-        else if (email.includes('@yahoo.')) loginSource = 'Yahoo Mail';
-        else if (email.includes('@outlook.') || email.includes('@hotmail.')) loginSource = 'Microsoft (Outlook)';
-        else if (email.includes('@icloud.')) loginSource = 'Apple (iCloud)';
-        else if (email && email.includes('@')) loginSource = 'Email (' + email.split('@')[1] + ')';
-
-        return {
-          id: p.id || '—',
-          name: p.name || '',
-          phone: phone || 'N/A',
-          email: email || 'N/A',
-          age: p.age || '—',
-          gender: p.gender || '—',
-          joinedDate: p.updated_at
-            ? new Date(p.updated_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-            : '—',
-          status,
-          overallProgress,
-          flowersCompleted,
-          pearlsCompleted,
-          aayaatCompleted,
-          loginSource,
-        };
+      users.forEach((user, index) => {
+        const row = document.createElement('tr');
+        appendCell(row, index + 1);
+        appendCell(row, displayName(user), 'user-name-text');
+        appendCell(row, user.phone !== 'N/A' ? user.phone : user.email);
+        appendCell(row, user.joinedDate);
+        const progressColour = user.overallProgress >= 75 ? '#10B981' : (user.overallProgress < 40 ? '#F43F5E' : '#EAB308');
+        appendProgressCell(row, user.overallProgress, progressColour);
+        appendStatusCell(row, user.status);
+        row.addEventListener('click', () => openUserDetails(user));
+        elements.dashboardTable.appendChild(row);
       });
+    }
 
-      // Update KPI
-      if (kpiTotalUsers) kpiTotalUsers.textContent = usersList.length;
-      if (kpiActiveLearners) kpiActiveLearners.textContent = activeCount;
-      if (kpiCompletedUsers) kpiCompletedUsers.textContent = completedCount;
-      if (kpiTotalTrend) {
-        kpiTotalTrend.innerHTML = '<i class="fa-solid fa-circle-check"></i> Live — Synced';
-        kpiTotalTrend.className = 'kpi-trend positive';
+    function renderUsersTable(users) {
+      if (!elements.usersTable) return;
+      elements.usersTable.replaceChildren();
+      if (elements.usersCount) elements.usersCount.textContent = `${users.length} Users`;
+
+      if (!users.length) {
+        showEmptyRow(elements.usersTable, 12, 'No matching user profiles found.');
+        return;
       }
 
-      renderDashboardTable(usersList);
-      renderFullUsersTable(usersList);
-    } catch (e) {
-      console.error("Fetch Exception:", e);
-      if (kpiTotalTrend) kpiTotalTrend.textContent = '❌ Sync Failed';
-    } finally {
-      isFetching = false;
-      icons.forEach(i => i.classList.remove('fa-spin'));
+      users.forEach((user, index) => {
+        const row = document.createElement('tr');
+        appendCell(row, index + 1);
+        appendCell(row, user.id === '—' ? '—' : `${user.id.slice(0, 8)}…`);
+        appendCell(row, displayName(user), 'user-name-text');
+        appendCell(row, user.phone !== 'N/A' ? user.phone : user.email);
+        appendCell(row, user.age);
+        appendCell(row, user.gender);
+        appendCell(row, user.joinedDate);
+        appendProgressCell(row, user.percentages.flowers, '#CC9933');
+        appendProgressCell(row, user.percentages.pearls, '#2563EB');
+        appendProgressCell(row, user.percentages.aayaat, '#D97706');
+        appendStatusCell(row, user.status);
+
+        const actionCell = document.createElement('td');
+        actionCell.style.textAlign = 'right';
+        const action = document.createElement('button');
+        action.type = 'button';
+        action.className = 'action-btn';
+        action.title = 'View Details';
+        action.setAttribute('aria-label', `View details for ${displayName(user)}`);
+        const icon = document.createElement('i');
+        icon.className = 'fa-solid fa-eye';
+        action.appendChild(icon);
+        actionCell.appendChild(action);
+        row.appendChild(actionCell);
+
+        row.addEventListener('click', () => openUserDetails(user));
+        elements.usersTable.appendChild(row);
+      });
     }
-  }
 
-  // ══════════════════════════════════════
-  //  DASHBOARD TABLE (Compact Preview)
-  // ══════════════════════════════════════
-  function renderDashboardTable(users) {
-    if (!usersTableBody) return;
-    usersTableBody.innerHTML = '';
-    if (usersCountBadge) usersCountBadge.textContent = `${users.length} Users`;
+    function filteredProfiles(query) {
+      const normalisedQuery = String(query || '').trim().toLowerCase();
+      if (!normalisedQuery) return profiles;
+      return profiles.filter((user) => [user.name, user.phone, user.email, user.id]
+        .some((value) => String(value || '').toLowerCase().includes(normalisedQuery)));
+    }
 
-    if (users.length === 0) {
-      usersTableBody.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align:center; padding:30px 20px; color:var(--text-muted);">
-            <div style="background:#FEF3C7; border:1px solid #F59E0B; border-radius:12px; padding:16px; max-width:540px; margin:0 auto; text-align:left; color:#92400E;">
-              <div style="display:flex; align-items:center; gap:8px; font-weight:800; font-size:0.95rem; margin-bottom:6px;">
-                <i class="fa-solid fa-lock" style="color:#D97706;"></i> Supabase Row Level Security (RLS) Active
-              </div>
-              <p style="font-size:0.82rem; margin:0; line-height:1.4;">
-                Supabase currently hides profiles from the Admin panel unless an RLS Read Policy is enabled. To show all 11-12 users continuously:
-              </p>
-              <code style="display:block; background:#FFFFFF; padding:8px 12px; border-radius:6px; margin-top:8px; font-size:0.78rem; font-family:monospace; border:1px solid #FCD34D;">
-                ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
-              </code>
-            </div>
-          </td>
-        </tr>`;
+    function updateSummary() {
+      const active = profiles.filter((user) => user.status !== 'New').length;
+      const completed = profiles.filter((user) => user.status === 'Graduated').length;
+      if (elements.totalUsers) elements.totalUsers.textContent = profiles.length;
+      if (elements.activeLearners) elements.activeLearners.textContent = active;
+      if (elements.completedUsers) elements.completedUsers.textContent = completed;
+    }
+
+    function setProgressDetails(prefix, count, percentage) {
+      setText(`modal-${prefix}-count`, count);
+      setText(`modal-${prefix}-pct`, `${percentage}%`);
+      const bar = document.getElementById(`modal-${prefix}-bar`);
+      if (bar) bar.style.width = `${percentage}%`;
+    }
+
+    function openUserDetails(user) {
+      if (!elements.userModal) return;
+      setText('modal-user-id', `ID: ${user.id}`);
+      setText('modal-user-name', displayName(user));
+      setText('modal-user-phone', user.phone === 'N/A' ? '—' : user.phone);
+      setText('modal-user-email', user.email === 'N/A' ? '—' : user.email);
+      setText('modal-user-date', user.joinedDate);
+      setText('modal-user-age', user.age);
+      setText('modal-user-gender', user.gender);
+      setText('modal-login-source', user.loginSource);
+      setText('modal-user-status', user.status);
+      setProgressDetails('flowers', user.flowersCompleted, user.percentages.flowers);
+      setProgressDetails('pearls', user.pearlsCompleted, user.percentages.pearls);
+      setProgressDetails('aayaat', user.aayaatCompleted, user.percentages.aayaat);
+      elements.userModal.classList.add('active');
+    }
+
+    async function isConfiguredAdministrator() {
+      const { data, error } = await client.rpc('is_admin');
+      if (error) {
+        throw new Error('Administrator security is not configured. Run supabase_admin_setup.sql in Supabase first.');
+      }
+      return data === true;
+    }
+
+    async function establishAdminSession(user) {
+      if (!user) {
+        showLogin();
+        return false;
+      }
+
+      try {
+        const allowed = await isConfiguredAdministrator();
+        if (!allowed) {
+          await client.auth.signOut({ scope: 'local' });
+          showLogin('This account is not authorised to use the administrator dashboard.');
+          return false;
+        }
+
+        isAdministrator = true;
+        showDashboard();
+        await fetchProfiles(true);
+        startRealtime();
+        return true;
+      } catch (error) {
+        await client.auth.signOut({ scope: 'local' });
+        showLogin(error.message || 'Unable to verify administrator access.');
+        return false;
+      }
+    }
+
+    async function fetchProfiles(showLoading = false) {
+      if (!isAdministrator || isFetching) return;
+      isFetching = true;
+      if (showLoading && elements.syncStatus) {
+        elements.syncStatus.textContent = 'Refreshing…';
+        elements.syncStatus.className = 'kpi-trend neutral';
+      }
+
+      try {
+        const { data, error } = await client
+          .from('profiles')
+          .select('*')
+          .order('updated_at', { ascending: false });
+
+        if (error) throw error;
+        profiles = (data || []).map(mapProfile);
+        updateSummary();
+        renderDashboardTable(filteredProfiles(elements.dashboardSearch?.value));
+        renderUsersTable(filteredProfiles(elements.usersSearch?.value));
+        if (elements.syncStatus) {
+          elements.syncStatus.textContent = 'Securely synced';
+          elements.syncStatus.className = 'kpi-trend positive';
+        }
+      } catch (error) {
+        profiles = [];
+        updateSummary();
+        renderDashboardTable([]);
+        renderUsersTable([]);
+        if (elements.syncStatus) {
+          elements.syncStatus.textContent = error.message || 'Unable to read profiles';
+          elements.syncStatus.className = 'kpi-trend neutral';
+        }
+      } finally {
+        isFetching = false;
+      }
+    }
+
+    function startRealtime() {
+      if (!isAdministrator || realtimeChannel) return;
+      realtimeChannel = client
+        .channel('secure-admin-profiles')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+          void fetchProfiles(false);
+        })
+        .subscribe();
+    }
+
+    async function stopRealtime() {
+      if (!realtimeChannel) return;
+      await client.removeChannel(realtimeChannel);
+      realtimeChannel = null;
+    }
+
+    elements.loginForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      showAuthMessage('');
+      setLoginBusy(true);
+
+      try {
+        const email = elements.emailInput.value.trim();
+        const password = elements.passwordInput.value;
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        await establishAdminSession(data.user);
+      } catch (error) {
+        showLogin(error.message || 'Sign-in failed. Please check your email and password.');
+      } finally {
+        setLoginBusy(false);
+      }
+    });
+
+    elements.logoutButton?.addEventListener('click', async () => {
+      await stopRealtime();
+      await client.auth.signOut({ scope: 'local' });
+      profiles = [];
+      showLogin();
+    });
+
+    elements.refreshDashboard?.addEventListener('click', () => void fetchProfiles(true));
+    elements.refreshUsers?.addEventListener('click', () => void fetchProfiles(true));
+    elements.dashboardSearch?.addEventListener('input', (event) => renderDashboardTable(filteredProfiles(event.target.value)));
+    elements.usersSearch?.addEventListener('input', (event) => renderUsersTable(filteredProfiles(event.target.value)));
+
+    const sidebarLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
+    sidebarLinks[0]?.addEventListener('click', () => switchPanel('dashboard'));
+    sidebarLinks[1]?.addEventListener('click', () => switchPanel('users'));
+
+    elements.closeUserModal?.addEventListener('click', () => elements.userModal?.classList.remove('active'));
+    elements.userModal?.addEventListener('click', (event) => {
+      if (event.target === elements.userModal) elements.userModal.classList.remove('active');
+    });
+
+    if (!window.supabase?.createClient) {
+      showLogin('The secure login service could not load. Check your connection and refresh the page.');
       return;
     }
 
-    users.forEach((user, idx) => {
-      const tr = document.createElement('tr');
-      const displayName = user.name || (user.phone !== 'N/A' ? user.phone : (user.email !== 'N/A' ? user.email.split('@')[0] : 'Unknown'));
-      const contactInfo = user.phone !== 'N/A' ? user.phone : user.email;
-      let progressColor = user.overallProgress >= 75 ? '#10B981' : (user.overallProgress < 40 ? '#F43F5E' : '#EAB308');
-      let statusClass = user.status === 'New' ? 'ready' : 'done';
-
-      tr.innerHTML = `
-        <td style="font-family:monospace; color:var(--text-muted);">${idx + 1}</td>
-        <td><span class="user-name-text">${displayName}</span></td>
-        <td style="color:var(--text-muted);">${contactInfo}</td>
-        <td style="color:var(--text-muted);">${user.joinedDate}</td>
-        <td>
-          <div class="progress-cell">
-            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${user.overallProgress}%; background:${progressColor};"></div></div>
-            <span class="progress-text">${user.overallProgress}%</span>
-          </div>
-        </td>
-        <td><span class="status-badge-bottom ${statusClass}">${user.status}</span></td>
-      `;
-      tr.style.cursor = 'pointer';
-      tr.addEventListener('click', () => openUserDetails(user));
-      usersTableBody.appendChild(tr);
+    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        storageKey: 'flowers-secure-admin-session',
+        storage: window.sessionStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false
+      }
     });
-  }
 
-  // Dashboard search
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase();
-      renderDashboardTable(usersList.filter(u =>
-        (u.name || '').toLowerCase().includes(q) || (u.phone || '').toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
-      ));
+    client.auth.onAuthStateChange((event) => {
+      // Avoid clearing the authorization error when an authenticated but
+      // unauthorized account is deliberately signed out.
+      if (event === 'SIGNED_OUT' && isAdministrator) showLogin();
     });
-  }
 
-  // ══════════════════════════════════════
-  //  FULL USERS TABLE (Registered Users Panel)
-  // ══════════════════════════════════════
-  function renderFullUsersTable(users) {
-    if (!panelUsersTableBody) return;
-    panelUsersTableBody.innerHTML = '';
-    if (panelUsersCountBadge) panelUsersCountBadge.textContent = `${users.length} Users`;
-
-    if (users.length === 0) {
-      panelUsersTableBody.innerHTML = `
-        <tr>
-          <td colspan="12" style="text-align:center; padding:30px 20px; color:var(--text-muted);">
-            <div style="background:#FEF3C7; border:1px solid #F59E0B; border-radius:12px; padding:16px; max-width:540px; margin:0 auto; text-align:left; color:#92400E;">
-              <div style="display:flex; align-items:center; gap:8px; font-weight:800; font-size:0.95rem; margin-bottom:6px;">
-                <i class="fa-solid fa-lock" style="color:#D97706;"></i> Supabase Row Level Security (RLS) Active
-              </div>
-              <p style="font-size:0.82rem; margin:0; line-height:1.4;">
-                Supabase is currently restricting profile reading. Run this 1-line command in your Supabase SQL Editor to show all 11-12 users permanently:
-              </p>
-              <code style="display:block; background:#FFFFFF; padding:8px 12px; border-radius:6px; margin-top:8px; font-size:0.78rem; font-family:monospace; border:1px solid #FCD34D;">
-                ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
-              </code>
-            </div>
-          </td>
-        </tr>`;
-      return;
-    }
-
-    users.forEach((user, idx) => {
-      const tr = document.createElement('tr');
-      const displayName = user.name || (user.phone !== 'N/A' ? user.phone : (user.email !== 'N/A' ? user.email.split('@')[0] : 'Unknown'));
-      const contactInfo = user.phone !== 'N/A' ? user.phone : user.email;
-      let statusClass = user.status === 'New' ? 'ready' : 'done';
-
-      const flowersPct = Math.min(100, Math.round((user.flowersCompleted / 24) * 100));
-      const pearlsPct = user.pearlsCompleted > 0 ? Math.min(100, Math.round((user.pearlsCompleted / 30) * 100)) : 0;
-      const aayaatPct = user.aayaatCompleted > 0 ? Math.min(100, Math.round((user.aayaatCompleted / 50) * 100)) : 0;
-
-      tr.innerHTML = `
-        <td style="font-family:monospace; color:var(--text-muted);">${idx + 1}</td>
-        <td style="font-family:monospace; color:var(--text-muted); font-size:0.72rem;">${user.id.substring(0, 8)}…</td>
-        <td><span class="user-name-text">${displayName}</span></td>
-        <td style="color:var(--text-muted);">${contactInfo}</td>
-        <td style="color:var(--text-muted); text-align:center;">${user.age}</td>
-        <td style="color:var(--text-muted); text-align:center;">${user.gender}</td>
-        <td style="color:var(--text-muted);">${user.joinedDate}</td>
-        <td>
-          <div class="progress-cell">
-            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${flowersPct}%; background:#CC9933;"></div></div>
-            <span class="progress-text">${flowersPct}%</span>
-          </div>
-        </td>
-        <td>
-          <div class="progress-cell">
-            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pearlsPct}%; background:#2563EB;"></div></div>
-            <span class="progress-text">${pearlsPct}%</span>
-          </div>
-        </td>
-        <td>
-          <div class="progress-cell">
-            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${aayaatPct}%; background:#D97706;"></div></div>
-            <span class="progress-text">${aayaatPct}%</span>
-          </div>
-        </td>
-        <td><span class="status-badge-bottom ${statusClass}">${user.status}</span></td>
-        <td style="text-align:right;">
-          <button class="action-btn" title="View Details"><i class="fa-solid fa-eye"></i></button>
-        </td>
-      `;
-      tr.style.cursor = 'pointer';
-      tr.addEventListener('click', () => openUserDetails(user));
-      panelUsersTableBody.appendChild(tr);
-    });
-  }
-
-  // Full users panel search
-  if (panelUsersSearch) {
-    panelUsersSearch.addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase();
-      renderFullUsersTable(usersList.filter(u =>
-        (u.name || '').toLowerCase().includes(q) || (u.phone || '').toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.id.toLowerCase().includes(q)
-      ));
-    });
-  }
-
-  // ══════════════════════════════════════
-  //  USER DETAILS MODAL
-  // ══════════════════════════════════════
-  function openUserDetails(user) {
-    if (!user || !userModal) return;
-    const displayName = user.name || (user.phone !== 'N/A' ? user.phone : (user.email !== 'N/A' ? user.email.split('@')[0] : 'Unknown'));
-
-    const elId = document.getElementById('modal-user-id');
-    const elName = document.getElementById('modal-user-name');
-    const elPhone = document.getElementById('modal-user-phone');
-    const elEmail = document.getElementById('modal-user-email');
-    const elDate = document.getElementById('modal-user-date');
-    const elAge = document.getElementById('modal-user-age');
-    const elGender = document.getElementById('modal-user-gender');
-    const elSource = document.getElementById('modal-login-source');
-
-    if (elId) elId.textContent = 'ID: ' + user.id;
-    if (elName) elName.textContent = displayName;
-    if (elPhone) elPhone.textContent = user.phone !== 'N/A' ? user.phone : '—';
-    if (elEmail) elEmail.textContent = user.email !== 'N/A' ? user.email : '—';
-    if (elDate) elDate.textContent = user.joinedDate;
-    if (elAge) elAge.textContent = user.age;
-    if (elGender) elGender.textContent = user.gender;
-    if (elSource) elSource.textContent = user.loginSource;
-
-    // Status
-    let statusClass = user.status === 'New' ? 'ready' : 'done';
-    const statusEl = document.getElementById('modal-user-status');
-    if (statusEl) {
-      statusEl.textContent = user.status;
-      statusEl.className = 'status-badge-bottom ' + statusClass;
-    }
-
-    // Flowers progress
-    const flowersPct = Math.min(100, Math.round((user.flowersCompleted / 24) * 100));
-    const elFlPct = document.getElementById('modal-flowers-pct');
-    const elFlBar = document.getElementById('modal-flowers-bar');
-    const elFlCnt = document.getElementById('modal-flowers-count');
-    if (elFlPct) elFlPct.textContent = flowersPct + '%';
-    if (elFlBar) elFlBar.style.width = flowersPct + '%';
-    if (elFlCnt) elFlCnt.textContent = user.flowersCompleted;
-
-    // Pearls progress
-    const pearlsPct = user.pearlsCompleted > 0 ? Math.min(100, Math.round((user.pearlsCompleted / 30) * 100)) : 0;
-    const elPePct = document.getElementById('modal-pearls-pct');
-    const elPeBar = document.getElementById('modal-pearls-bar');
-    const elPeCnt = document.getElementById('modal-pearls-count');
-    if (elPePct) elPePct.textContent = pearlsPct + '%';
-    if (elPeBar) elPeBar.style.width = pearlsPct + '%';
-    if (elPeCnt) elPeCnt.textContent = user.pearlsCompleted;
-
-    // Aayaat progress
-    const aayaatPct = user.aayaatCompleted > 0 ? Math.min(100, Math.round((user.aayaatCompleted / 50) * 100)) : 0;
-    const elAaPct = document.getElementById('modal-aayaat-pct');
-    const elAaBar = document.getElementById('modal-aayaat-bar');
-    const elAaCnt = document.getElementById('modal-aayaat-count');
-    if (elAaPct) elAaPct.textContent = aayaatPct + '%';
-    if (elAaBar) elAaBar.style.width = aayaatPct + '%';
-    if (elAaCnt) elAaCnt.textContent = user.aayaatCompleted;
-
-    userModal.classList.add('active');
-  }
-
-  if (btnCloseModal) {
-    btnCloseModal.addEventListener('click', () => userModal.classList.remove('active'));
-  }
-  if (userModal) {
-    userModal.addEventListener('click', (e) => {
-      if (e.target === userModal) userModal.classList.remove('active');
-    });
-  }
-
-  // ── Boot ──
-  initSupabase();
-  updateView();
-});
+    void (async () => {
+      const { data, error } = await client.auth.getUser();
+      if (error || !data.user) {
+        showLogin();
+        return;
+      }
+      await establishAdminSession(data.user);
+    })();
+  });
+})();

@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Admin Dashboard - Flowers of Quran</title>
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Secure Admin Dashboard - Flowers of Quran</title>
 
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
@@ -21,37 +22,42 @@
 
 <body class="admin-body">
 
-  <!-- 1. LOGIN SCREEN (Visible when not authenticated) -->
+  <!-- Administrator credentials are verified by Supabase Auth and are never stored in this site. -->
   <div id="admin-login-view" class="admin-login-container">
     <div class="modal-card admin-login-card">
       <div class="flex-center mb-6" style="display: flex; align-items: center; justify-content: center;">
         <div class="brand-flower-icon" style="font-size: 2.5rem;">🌸</div>
-        <h1 class="brand-title" style="margin-left: 10px; font-size: 1.8rem;">Aayaatul Quran</h1>
+        <h1 class="brand-title" style="margin-left: 10px; font-size: 1.8rem;">Flowers of Quran</h1>
       </div>
 
       <p class="text-muted text-center" style="margin-bottom: 24px; font-weight: 600;">
-        Sign in to access user management, analytics & progress monitor
+        Sign in with an administrator account configured in Supabase
       </p>
 
-      <div id="auth-error-msg" class="feedback-box wrong" style="display:none; margin-bottom: 14px;"></div>
+      <div id="auth-error-msg" class="feedback-box wrong" role="alert" aria-live="polite"
+        style="display:none; margin-bottom: 14px;"></div>
 
       <form id="admin-login-form" class="space-y-4 text-left">
         <div style="margin-bottom: 14px;">
-          <label style="display:block; font-weight:700; margin-bottom:6px;">Admin Email</label>
-          <input type="email" id="login-email" class="option-btn" style="width:100%; cursor:text; text-align: left;"
-            placeholder="@gmail.com" required>
+          <label for="login-email" style="display:block; font-weight:700; margin-bottom:6px;">Admin Email</label>
+          <input type="email" id="login-email" class="option-btn" autocomplete="username"
+            style="width:100%; cursor:text; text-align: left;" placeholder="admin@example.com" required>
         </div>
 
         <div style="margin-bottom: 24px;">
-          <label style="display:block; font-weight:700; margin-bottom:6px;">Password</label>
-          <input type="password" id="login-password" class="option-btn"
-            style="width:100%; cursor:text; text-align: left;" placeholder="••••••••" required>
+          <label for="login-password" style="display:block; font-weight:700; margin-bottom:6px;">Password</label>
+          <input type="password" id="login-password" class="option-btn" autocomplete="current-password"
+            style="width:100%; cursor:text; text-align: left;" placeholder="Enter your password" required>
         </div>
 
         <button type="submit" class="btn-next-question w-full" id="btn-submit-login" style="width: 100%;">
-          Sign In to Admin Panel ➔
+          Sign In Securely ➔
         </button>
       </form>
+
+      <p class="text-muted text-center" style="line-height: 1.5; margin-top: 18px; font-size: 0.8rem;">
+        Access is allowed only when the signed-in account is listed in the protected administrator table.
+      </p>
     </div>
   </div>
 
@@ -71,7 +77,7 @@
           <i class="fa-solid fa-chart-line"></i>
           <span>Dashboard Overview</span>
         </button>
-        <button class="sidebar-link">
+        <button class="sidebar-link" disabled aria-disabled="true" title="Contact-message storage is not configured yet">
           <i class="fa-solid fa-users"></i>
           <span>Registered Users</span>
         </button>
@@ -329,9 +335,8 @@
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../src/js/admin.js?v=2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4"></script>
+  <script src="../src/js/admin.js?v=3.0"></script>
 </body>
 
 </html>

@@ -118,6 +118,7 @@ class SupabaseSyncManager {
             data: {
               name: metadata.name || '',
               phone: fullPhone,
+              email: metadata.email || '',
               age: metadata.age ? parseInt(metadata.age, 10) : null,
               gender: metadata.gender || ''
             }
@@ -144,8 +145,10 @@ class SupabaseSyncManager {
 
           const { error: upsertErr } = await this.client.from('profiles').upsert(profilePayload, { onConflict: 'id' });
           if (upsertErr) {
-            // If phone column doesn't exist yet in Supabase table, fallback safely
+            // If phone, age, or gender columns don't exist yet in Supabase table, fallback safely
             delete profilePayload.phone;
+            delete profilePayload.age;
+            delete profilePayload.gender;
             await this.client.from('profiles').upsert(profilePayload, { onConflict: 'id' });
           }
         } catch (upsertErr) {
@@ -235,7 +238,13 @@ class SupabaseSyncManager {
 
         if (data.user.email) profilePayload.email = data.user.email;
 
-        await this.client.from('profiles').upsert(profilePayload, { onConflict: 'id' });
+        const { error: upsertErr } = await this.client.from('profiles').upsert(profilePayload, { onConflict: 'id' });
+        if (upsertErr) {
+          delete profilePayload.phone;
+          delete profilePayload.age;
+          delete profilePayload.gender;
+          await this.client.from('profiles').upsert(profilePayload, { onConflict: 'id' });
+        }
       } catch (upsertErr) {
         console.log("Profile auto-upsert note after OTP verify:", upsertErr);
       }
