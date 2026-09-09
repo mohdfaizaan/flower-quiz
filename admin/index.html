@@ -81,9 +81,14 @@
           <i class="fa-solid fa-users"></i>
           <span>Registered Users</span>
         </button>
+        <div class="nav-section-title" style="margin-top: 15px;">Competitions</div>
         <button class="sidebar-link">
-          <i class="fa-solid fa-message"></i>
-          <span>New Messages</span>
+          <i class="fa-solid fa-seedling" style="color: #d97706;"></i>
+          <span>🌸 Flowers Participants</span>
+        </button>
+        <button class="sidebar-link">
+          <i class="fa-solid fa-gem" style="color: #2563eb;"></i>
+          <span>📿 Pearls Participants</span>
         </button>
       </nav>
 
@@ -233,6 +238,72 @@
 
       </div>
 
+      <!-- ═══ PANEL 3: FLOWERS PARTICIPANTS ═══ -->
+      <div id="panel-flowers-comp" class="admin-panel" style="display: none;">
+        <header class="admin-top-header">
+          <div>
+            <h1 class="hero-main-title" style="font-size: 2rem; margin-bottom: 0;">🌸 Flowers Participants</h1>
+            <p class="section-sub-title">Registered competitors for Flowers of Quran</p>
+          </div>
+          <div class="admin-top-actions">
+            <button id="btn-refresh-flowers-comp" class="btn-icon-sound notification-btn" title="Refresh Data">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+          </div>
+        </header>
+
+        <section class="table-section mt-6">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Gender</th>
+                  <th>Phone Number</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="flowers-comp-table-body">
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- ═══ PANEL 4: PEARLS PARTICIPANTS ═══ -->
+      <div id="panel-pearls-comp" class="admin-panel" style="display: none;">
+        <header class="admin-top-header">
+          <div>
+            <h1 class="hero-main-title" style="font-size: 2rem; margin-bottom: 0;">📿 Pearls Participants</h1>
+            <p class="section-sub-title">Registered competitors for Pearls of Quran</p>
+          </div>
+          <div class="admin-top-actions">
+            <button id="btn-refresh-pearls-comp" class="btn-icon-sound notification-btn" title="Refresh Data">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+          </div>
+        </header>
+
+        <section class="table-section mt-6">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Gender</th>
+                  <th>Phone Number</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="pearls-comp-table-body">
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
     </main>
   </div>
 
@@ -331,6 +402,39 @@
           <span class="status-badge-bottom done" id="modal-user-status">Active</span>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ COMPETITION PARTICIPANT MODAL ═══ -->
+  <div class="modal-overlay" id="comp-participant-modal">
+    <div class="modal-card" style="max-width: 500px; text-align: left;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="brand-flower-icon" style="font-size: 1.5rem;" id="comp-modal-icon">🏆</div>
+          <div>
+            <h2 class="brand-title" style="font-size: 1.3rem;">Participant Details</h2>
+            <p class="section-card-sub" style="margin:0;" id="comp-modal-reg-id">ID: —</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" id="btn-close-comp-modal" style="position: static; margin: 0;">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="background: var(--gold-light); border: 1.5px solid var(--gold-border); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+          <h5 id="comp-modal-name" style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; margin-bottom: 8px;">—</h5>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;"><strong>Father's Name:</strong> <span id="comp-modal-father">—</span></p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;"><strong>Phone:</strong> <span id="comp-modal-phone">—</span></p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;"><strong>Email:</strong> <span id="comp-modal-email">—</span></p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;"><strong>Demographics:</strong> <span id="comp-modal-age">—</span> Years • <span id="comp-modal-gender">—</span></p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;"><strong>Certificate ID:</strong> <span id="comp-modal-cert-id">—</span></p>
+          
+          <div style="text-align: center; border-top: 1px solid var(--gold-border); padding-top: 12px;">
+            <a href="#" target="_blank" id="btn-view-certificate" class="btn-next-question" style="display: inline-flex; width: 100%; justify-content: center; text-decoration: none; padding: 10px;">
+              <i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i> View Certificate
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </div>

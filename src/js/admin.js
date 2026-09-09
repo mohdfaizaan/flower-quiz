@@ -22,6 +22,8 @@
       refreshUsers: document.getElementById('btn-refresh-users'),
       panelDashboard: document.getElementById('panel-dashboard'),
       panelUsers: document.getElementById('panel-users'),
+      panelFlowersComp: document.getElementById('panel-flowers-comp'),
+      panelPearlsComp: document.getElementById('panel-pearls-comp'),
       dashboardSearch: document.getElementById('user-search-input'),
       usersSearch: document.getElementById('panel-users-search'),
       dashboardTable: document.getElementById('users-table-body'),
@@ -33,11 +35,32 @@
       completedUsers: document.getElementById('kpi-completed-users'),
       syncStatus: document.getElementById('kpi-total-trend'),
       userModal: document.getElementById('user-details-modal'),
-      closeUserModal: document.getElementById('btn-close-user-modal')
+      closeUserModal: document.getElementById('btn-close-user-modal'),
+      
+      // Competitions Elements
+      flowersCompTableBody: document.getElementById('flowers-comp-table-body'),
+      pearlsCompTableBody: document.getElementById('pearls-comp-table-body'),
+      btnRefreshFlowersComp: document.getElementById('btn-refresh-flowers-comp'),
+      btnRefreshPearlsComp: document.getElementById('btn-refresh-pearls-comp'),
+      compModal: document.getElementById('comp-participant-modal'),
+      btnCloseCompModal: document.getElementById('btn-close-comp-modal'),
+      compModalElements: {
+        icon: document.getElementById('comp-modal-icon'),
+        regId: document.getElementById('comp-modal-reg-id'),
+        name: document.getElementById('comp-modal-name'),
+        father: document.getElementById('comp-modal-father'),
+        phone: document.getElementById('comp-modal-phone'),
+        email: document.getElementById('comp-modal-email'),
+        age: document.getElementById('comp-modal-age'),
+        gender: document.getElementById('comp-modal-gender'),
+        certId: document.getElementById('comp-modal-cert-id'),
+        btnViewCert: document.getElementById('btn-view-certificate')
+      }
     };
 
     let client = null;
     let profiles = [];
+    let compParticipants = [];
     let realtimeChannel = null;
     let isAdministrator = false;
     let isFetching = false;
@@ -81,10 +104,15 @@
       if (!isAdministrator) return;
       if (elements.panelDashboard) elements.panelDashboard.style.display = panelName === 'dashboard' ? 'block' : 'none';
       if (elements.panelUsers) elements.panelUsers.style.display = panelName === 'users' ? 'block' : 'none';
+      if (elements.panelFlowersComp) elements.panelFlowersComp.style.display = panelName === 'flowers-comp' ? 'block' : 'none';
+      if (elements.panelPearlsComp) elements.panelPearlsComp.style.display = panelName === 'pearls-comp' ? 'block' : 'none';
 
       const links = document.querySelectorAll('.sidebar-nav .sidebar-link');
       links.forEach((link, index) => {
-        const isActive = (panelName === 'dashboard' && index === 0) || (panelName === 'users' && index === 1);
+        const isActive = (panelName === 'dashboard' && index === 0) || 
+                         (panelName === 'users' && index === 1) ||
+                         (panelName === 'flowers-comp' && index === 2) ||
+                         (panelName === 'pearls-comp' && index === 3);
         link.classList.toggle('active', isActive);
       });
     }
@@ -351,6 +379,7 @@
         isAdministrator = true;
         showDashboard();
         await fetchProfiles(true);
+        await fetchCompetitors(true);
         startRealtime();
         return true;
       } catch (error) {
@@ -397,6 +426,117 @@
       }
     }
 
+    async function fetchCompetitors(showLoading = false) {
+      if (!isAdministrator) return;
+      try {
+        const { data, error } = await client
+          .from('competition_participants')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          if (error.code === '42P01') {
+             // Table doesn't exist yet, just ignore safely.
+             compParticipants = [];
+          } else {
+             throw error;
+          }
+        } else {
+          compParticipants = data || [];
+        }
+        
+        renderFlowersTable(compParticipants.filter(p => p.program === 'flowers'));
+        renderPearlsTable(compParticipants.filter(p => p.program === 'pearls'));
+      } catch (error) {
+        console.error("Error fetching competitors:", error);
+      }
+    }
+
+    function renderFlowersTable(participants) {
+      if (!elements.flowersCompTableBody) return;
+      elements.flowersCompTableBody.replaceChildren();
+      
+      if (!participants.length) {
+        showEmptyRow(elements.flowersCompTableBody, 5, 'No flowers participants found.');
+        return;
+      }
+
+      participants.forEach((p, index) => {
+        const row = document.createElement('tr');
+        appendCell(row, index + 1);
+        appendCell(row, p.student_name || '—', 'user-name-text');
+        appendCell(row, p.gender || '—');
+        appendCell(row, p.phone_number || p.email || '—');
+        
+        const actionCell = document.createElement('td');
+        actionCell.style.textAlign = 'right';
+        const action = document.createElement('button');
+        action.type = 'button';
+        action.className = 'action-btn';
+        action.title = 'View Details';
+        action.innerHTML = '<i class="fa-solid fa-eye"></i>';
+        actionCell.appendChild(action);
+        row.appendChild(actionCell);
+
+        row.addEventListener('click', () => openCompDetails(p, '🌸 Flowers', 'flowers'));
+        elements.flowersCompTableBody.appendChild(row);
+      });
+    }
+
+    function renderPearlsTable(participants) {
+      if (!elements.pearlsCompTableBody) return;
+      elements.pearlsCompTableBody.replaceChildren();
+      
+      if (!participants.length) {
+        showEmptyRow(elements.pearlsCompTableBody, 5, 'No pearls participants found.');
+        return;
+      }
+
+      participants.forEach((p, index) => {
+        const row = document.createElement('tr');
+        appendCell(row, index + 1);
+        appendCell(row, p.student_name || '—', 'user-name-text');
+        appendCell(row, p.gender || '—');
+        appendCell(row, p.phone_number || p.email || '—');
+        
+        const actionCell = document.createElement('td');
+        actionCell.style.textAlign = 'right';
+        const action = document.createElement('button');
+        action.type = 'button';
+        action.className = 'action-btn';
+        action.title = 'View Details';
+        action.innerHTML = '<i class="fa-solid fa-eye"></i>';
+        actionCell.appendChild(action);
+        row.appendChild(actionCell);
+
+        row.addEventListener('click', () => openCompDetails(p, '📿 Pearls', 'pearls'));
+        elements.pearlsCompTableBody.appendChild(row);
+      });
+    }
+
+    function openCompDetails(p, titleIconText, program) {
+      if (!elements.compModal) return;
+      
+      elements.compModalElements.icon.textContent = program === 'flowers' ? '🌸' : '📿';
+      elements.compModalElements.regId.textContent = `ID: ${p.registration_id || '—'}`;
+      elements.compModalElements.name.textContent = p.student_name || '—';
+      elements.compModalElements.father.textContent = p.father_name || '—';
+      elements.compModalElements.phone.textContent = p.phone_number || '—';
+      elements.compModalElements.email.textContent = p.email || '—';
+      elements.compModalElements.age.textContent = p.age || '—';
+      elements.compModalElements.gender.textContent = p.gender || '—';
+      elements.compModalElements.certId.textContent = p.certificate_id || '—';
+      
+      if (p.certificate_file_url) {
+        elements.compModalElements.btnViewCert.style.display = 'inline-flex';
+        elements.compModalElements.btnViewCert.href = p.certificate_file_url;
+      } else {
+        elements.compModalElements.btnViewCert.style.display = 'none';
+      }
+      
+      elements.compModal.classList.add('active');
+    }
+
     function startRealtime() {
       if (!isAdministrator || realtimeChannel) return;
       realtimeChannel = client
@@ -440,16 +580,26 @@
 
     elements.refreshDashboard?.addEventListener('click', () => void fetchProfiles(true));
     elements.refreshUsers?.addEventListener('click', () => void fetchProfiles(true));
+    elements.btnRefreshFlowersComp?.addEventListener('click', () => void fetchCompetitors(true));
+    elements.btnRefreshPearlsComp?.addEventListener('click', () => void fetchCompetitors(true));
+    
     elements.dashboardSearch?.addEventListener('input', (event) => renderDashboardTable(filteredProfiles(event.target.value)));
     elements.usersSearch?.addEventListener('input', (event) => renderUsersTable(filteredProfiles(event.target.value)));
 
     const sidebarLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
     sidebarLinks[0]?.addEventListener('click', () => switchPanel('dashboard'));
     sidebarLinks[1]?.addEventListener('click', () => switchPanel('users'));
+    sidebarLinks[2]?.addEventListener('click', () => switchPanel('flowers-comp'));
+    sidebarLinks[3]?.addEventListener('click', () => switchPanel('pearls-comp'));
 
     elements.closeUserModal?.addEventListener('click', () => elements.userModal?.classList.remove('active'));
     elements.userModal?.addEventListener('click', (event) => {
       if (event.target === elements.userModal) elements.userModal.classList.remove('active');
+    });
+
+    elements.btnCloseCompModal?.addEventListener('click', () => elements.compModal?.classList.remove('active'));
+    elements.compModal?.addEventListener('click', (event) => {
+      if (event.target === elements.compModal) elements.compModal.classList.remove('active');
     });
 
     if (!window.supabase?.createClient) {

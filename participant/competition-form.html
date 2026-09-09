@@ -1251,21 +1251,62 @@
           btnSubmit.disabled = true;
           btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing Entry...`;
 
-          setTimeout(() => {
-            // Save to localStorage
+          setTimeout(async () => {
+            // --- SUPABASE INTEGRATION ---
+            const supabaseUrl = "https://mpdpebcmdpozfsgukxww.supabase.co";
+            const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZHBlYmNtZHBvemZzZ3VreHd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA5NDksImV4cCI6MjEwMzMwNjk0OX0.vN4Gzpm5ritKLlL-lHKGd9fd6hwkcKR76Lb6ADduGGU";
+            
+            let certFileUrl = null;
+            
+            try {
+              if (window.supabase) {
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                
+                // 1. Upload Certificate if selected
+                const fileInput = document.getElementById('comp-cert-file');
+                if (fileInput && fileInput.files.length > 0) {
+                  const file = fileInput.files[0];
+                  const fileExt = file.name.split('.').pop();
+                  const fileName = `${regId}_cert.${fileExt}`;
+                  
+                  const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('competition_certificates')
+                    .upload(fileName, file);
+                    
+                  if (!uploadError) {
+                    const { data: urlData } = supabase.storage
+                      .from('competition_certificates')
+                      .getPublicUrl(fileName);
+                    certFileUrl = urlData.publicUrl;
+                  }
+                }
+                
+                // 2. Insert into database
+                const { error: dbError } = await supabase
+                  .from('competition_participants')
+                  .insert([{
+                    program: 'flowers',
+                    registration_id: regId,
+                    student_name: name,
+                    father_name: fatherName,
+                    phone_number: fullPhone,
+                    email: email,
+                    age: parseInt(age),
+                    gender: gender,
+                    certificate_id: certNumber,
+                    certificate_file_url: certFileUrl
+                  }]);
+                  
+                if (dbError) console.error("Supabase DB Insert Error:", dbError);
+              }
+            } catch (err) {
+              console.error("Supabase integration failed:", err);
+            }
+            
+            // Save backup to localStorage
             try {
               const record = {
-                regId,
-                name,
-                fatherName,
-                fullPhone,
-                countryCode,
-                phoneNum,
-                email,
-                age,
-                gender,
-                certNumber,
-                timestamp: new Date().toISOString()
+                regId, name, fatherName, fullPhone, countryCode, phoneNum, email, age, gender, certNumber, certFileUrl, timestamp: new Date().toISOString()
               };
               const existing = JSON.parse(localStorage.getItem('flowers_competition_submissions') || '[]');
               existing.push(record);
@@ -1292,6 +1333,7 @@
       }
     });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 
 </html>
