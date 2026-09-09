@@ -14,28 +14,26 @@
   <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@700&display=swap"
+    rel="stylesheet">
 
   <!-- Font Awesome 6 Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
     :root {
-      --emerald-deep: #02241b;
-      --emerald-dark: #042f24;
-      --emerald-base: #064e3b;
-      --emerald-card: rgba(6, 78, 59, 0.65);
-      --emerald-border: rgba(52, 211, 153, 0.25);
-      --gold-primary: #f59e0b;
-      --gold-light: #fef3c7;
-      --gold-deep: #d97706;
-      --gold-glow: rgba(245, 158, 11, 0.4);
-      --text-light: #f3f4f6;
-      --text-muted: #9ca3af;
-      --text-emerald: #6ee7b7;
+      --gold-primary: #CC9933;
+      --gold-dark: #A67B24;
+      --gold-deep: #745B0E;
+      --gold-light: #FDFBF5;
+      --gold-border: #E5C568;
+      --gold-glow: rgba(204, 153, 51, 0.2);
+      --text-dark: #1F2937;
+      --text-muted: #6B7280;
       --danger: #ef4444;
       --success: #10b981;
-      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-main: 'Quicksand', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-heading: 'Outfit', sans-serif;
       --font-arabic: 'Amiri', serif;
     }
@@ -48,8 +46,8 @@
 
     body {
       font-family: var(--font-main);
-      background: radial-gradient(circle at 50% 0%, #065f46 0%, var(--emerald-deep) 65%, #01140e 100%);
-      color: var(--text-light);
+      background: #FFFFFF;
+      color: var(--text-dark);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -66,33 +64,18 @@
       transform: translateX(-50%);
       width: 600px;
       height: 350px;
-      background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0) 70%);
+      background: radial-gradient(circle, rgba(204, 153, 51, 0.15) 0%, rgba(204, 153, 51, 0) 70%);
       filter: blur(50px);
       pointer-events: none;
       z-index: 0;
     }
 
     .ambient-orb-2 {
-      position: fixed;
-      bottom: -150px;
-      right: -100px;
-      width: 450px;
-      height: 450px;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0) 70%);
-      filter: blur(60px);
-      pointer-events: none;
-      z-index: 0;
+      display: none;
     }
 
-    /* Geometric Star Pattern Overlay */
     .pattern-overlay {
-      position: fixed;
-      inset: 0;
-      background-image: radial-gradient(rgba(245, 158, 11, 0.08) 1px, transparent 1px);
-      background-size: 32px 32px;
-      opacity: 0.7;
-      pointer-events: none;
-      z-index: 0;
+      display: none;
     }
 
     /* Header Nav */
@@ -103,31 +86,31 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--emerald-border);
-      background: rgba(2, 36, 27, 0.7);
+      border-bottom: 2px solid var(--gold-border);
+      background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(12px);
+      box-shadow: 0 4px 16px rgba(166, 123, 36, 0.08);
     }
 
     .btn-back-garden {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      color: var(--text-emerald);
+      color: var(--gold-dark);
       text-decoration: none;
       font-size: 0.92rem;
       font-weight: 700;
       padding: 8px 16px;
       border-radius: 999px;
-      background: rgba(6, 78, 59, 0.5);
-      border: 1px solid var(--emerald-border);
+      background: var(--gold-light);
+      border: 1.5px solid var(--gold-border);
       transition: all 0.2s ease;
     }
 
     .btn-back-garden:hover {
-      background: rgba(52, 211, 153, 0.18);
-      color: #ffffff;
+      background: #FFFFFF;
       transform: translateX(-3px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 12px rgba(166, 123, 36, 0.1);
     }
 
     .portal-logo-wrap {
@@ -139,16 +122,15 @@
 
     .portal-logo-img {
       height: 46px;
-      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
     }
 
     .portal-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.15));
-      border: 1px solid rgba(245, 158, 11, 0.4);
-      color: #fef3c7;
+      background: var(--gold-light);
+      border: 1px solid var(--gold-border);
+      color: var(--gold-dark);
       font-size: 0.75rem;
       font-weight: 800;
       letter-spacing: 0.6px;
@@ -179,17 +161,15 @@
       font-size: 1.6rem;
       color: var(--gold-primary);
       margin-bottom: 4px;
-      letter-spacing: 0.5px;
-      text-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
     }
 
     .hero-title-tag {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      color: #fde68a;
+      background: var(--gold-light);
+      border: 1px solid var(--gold-border);
+      color: var(--gold-dark);
       font-size: 0.8rem;
       font-weight: 700;
       padding: 5px 14px;
@@ -203,47 +183,32 @@
       font-family: var(--font-heading);
       font-size: 2.1rem;
       font-weight: 800;
-      color: #ffffff;
+      color: var(--text-dark);
       line-height: 1.25;
       margin-bottom: 10px;
-      text-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
     }
 
     .hero-heading span {
-      background: linear-gradient(135deg, #fef3c7, #f59e0b, #fbbf24);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--gold-dark);
     }
 
     .hero-subtitle {
       font-size: 0.96rem;
-      color: #d1d5db;
+      color: var(--text-muted);
       max-width: 580px;
       margin: 0 auto;
       line-height: 1.55;
+      font-weight: 600;
     }
 
     /* Form Card Container */
     .form-card {
-      background: var(--emerald-card);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--emerald-border);
-      border-radius: 24px;
+      background: #FFFFFF;
+      border: 2px solid var(--gold-border);
+      border-radius: 20px;
       padding: 34px 28px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      box-shadow: 0 12px 30px rgba(154, 123, 28, 0.12);
       position: relative;
-    }
-
-    .form-card::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 10%;
-      right: 10%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
-      border-radius: 2px;
     }
 
     /* Section Headings */
@@ -254,10 +219,10 @@
       font-family: var(--font-heading);
       font-size: 1.05rem;
       font-weight: 700;
-      color: #fde68a;
+      color: var(--gold-dark);
       margin: 22px 0 14px 0;
       padding-bottom: 8px;
-      border-bottom: 1px dashed rgba(52, 211, 153, 0.2);
+      border-bottom: 1.5px solid var(--gold-light);
     }
 
     .form-section-title:first-of-type {
@@ -267,13 +232,13 @@
     .section-num {
       width: 24px;
       height: 24px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--gold-deep), var(--gold-primary));
-      color: #1f2937;
+      border-radius: 8px;
+      background: var(--gold-primary);
+      color: #FFFFFF;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
+      font-size: 0.85rem;
       font-weight: 800;
     }
 
@@ -299,7 +264,7 @@
       justify-content: space-between;
       font-size: 0.9rem;
       font-weight: 700;
-      color: #e5e7eb;
+      color: var(--text-dark);
       margin-bottom: 7px;
     }
 
@@ -310,41 +275,42 @@
     }
 
     .req-star {
-      color: #fb7185;
+      color: var(--danger);
       font-weight: 700;
     }
 
     .optional-badge {
       font-size: 0.72rem;
-      font-weight: 600;
-      background: rgba(255, 255, 255, 0.12);
-      color: #d1d5db;
+      font-weight: 700;
+      background: #F3F4F6;
+      color: var(--text-muted);
       padding: 2px 7px;
       border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid #E5E7EB;
     }
 
     .input-control {
       width: 100%;
-      background: rgba(2, 36, 27, 0.65);
-      border: 1.5px solid rgba(52, 211, 153, 0.3);
+      background: #FFFFFF;
+      border: 1.5px solid #D1D5DB;
       border-radius: 12px;
       padding: 12px 16px;
       font-family: var(--font-main);
       font-size: 0.95rem;
-      color: #ffffff;
+      color: var(--text-dark);
+      font-weight: 600;
       outline: none;
       transition: all 0.2s ease;
     }
 
     .input-control:focus {
-      background: rgba(2, 36, 27, 0.95);
       border-color: var(--gold-primary);
-      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+      box-shadow: 0 0 0 3px var(--gold-glow);
     }
 
     .input-control::placeholder {
-      color: #6b7280;
+      color: #9CA3AF;
+      font-weight: 500;
     }
 
     .uppercase-input {
@@ -355,7 +321,7 @@
     select.input-control {
       cursor: pointer;
       appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f59e0b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23CC9933'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 14px center;
       background-size: 16px;
@@ -363,8 +329,8 @@
     }
 
     select.input-control option {
-      background: #042f24;
-      color: #ffffff;
+      background: #FFFFFF;
+      color: var(--text-dark);
     }
 
     /* Phone Input Dual Box */
@@ -378,8 +344,8 @@
     .comp-code-wrap {
       display: inline-flex;
       align-items: center;
-      background: rgba(2, 36, 27, 0.65);
-      border: 1.5px solid rgba(52, 211, 153, 0.3);
+      background: #FFFFFF;
+      border: 1.5px solid #D1D5DB;
       border-radius: 12px;
       padding: 0 10px;
       width: 90px;
@@ -388,16 +354,15 @@
     }
 
     .comp-code-wrap:focus-within {
-      background: rgba(2, 36, 27, 0.95);
       border-color: var(--gold-primary);
-      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+      box-shadow: 0 0 0 3px var(--gold-glow);
     }
 
     .comp-plus {
       font-family: var(--font-heading);
       font-size: 1.05rem;
       font-weight: 800;
-      color: var(--gold-primary);
+      color: var(--gold-dark);
       user-select: none;
       margin-right: 2px;
     }
@@ -409,20 +374,20 @@
       font-family: var(--font-heading);
       font-size: 0.95rem;
       font-weight: 700;
-      color: #ffffff;
+      color: var(--text-dark);
       width: 100%;
       padding: 12px 0;
       letter-spacing: 0.5px;
     }
 
     .comp-code-input::placeholder {
-      color: #6b7280;
+      color: #9CA3AF;
     }
 
     /* Certificate Upload Zone */
     .cert-upload-zone {
-      border: 2px dashed rgba(245, 158, 11, 0.4);
-      background: rgba(2, 36, 27, 0.45);
+      border: 2px dashed var(--gold-border);
+      background: var(--gold-light);
       border-radius: 14px;
       padding: 22px;
       text-align: center;
@@ -433,8 +398,8 @@
 
     .cert-upload-zone:hover,
     .cert-upload-zone.dragover {
-      border-color: var(--gold-primary);
-      background: rgba(245, 158, 11, 0.08);
+      border-color: var(--gold-dark);
+      background: #FFF9E6;
       transform: translateY(-1px);
     }
 
@@ -447,21 +412,22 @@
     .upload-title {
       font-weight: 700;
       font-size: 0.92rem;
-      color: #ffffff;
+      color: var(--text-dark);
       margin-bottom: 4px;
     }
 
     .upload-sub {
       font-size: 0.78rem;
-      color: #9ca3af;
+      color: var(--text-muted);
+      font-weight: 600;
     }
 
     .file-preview-card {
       display: none;
       align-items: center;
       justify-content: space-between;
-      background: rgba(6, 78, 59, 0.8);
-      border: 1px solid var(--emerald-border);
+      background: #FFFFFF;
+      border: 1.5px solid var(--gold-border);
       border-radius: 10px;
       padding: 10px 14px;
       margin-top: 10px;
@@ -475,9 +441,9 @@
     }
 
     .file-preview-name {
-      font-weight: 600;
+      font-weight: 700;
       font-size: 0.88rem;
-      color: #ffffff;
+      color: var(--text-dark);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -485,13 +451,14 @@
 
     .file-preview-size {
       font-size: 0.75rem;
-      color: #9ca3af;
+      color: var(--text-muted);
+      font-weight: 600;
     }
 
     .btn-remove-file {
       background: none;
       border: none;
-      color: #ef4444;
+      color: var(--danger);
       cursor: pointer;
       font-size: 1.1rem;
       padding: 4px;
@@ -502,8 +469,8 @@
       display: flex;
       align-items: flex-start;
       gap: 12px;
-      background: rgba(2, 36, 27, 0.5);
-      border: 1px solid var(--emerald-border);
+      background: var(--gold-light);
+      border: 1.5px solid var(--gold-border);
       padding: 14px 16px;
       border-radius: 12px;
       margin-top: 16px;
@@ -521,9 +488,9 @@
 
     .confirm-checkbox-label {
       font-size: 0.86rem;
-      color: #d1d5db;
+      color: var(--text-dark);
       line-height: 1.45;
-      font-weight: 500;
+      font-weight: 600;
     }
 
     /* Error and Notification Banner */
@@ -532,28 +499,28 @@
       padding: 12px 16px;
       border-radius: 12px;
       font-size: 0.88rem;
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 18px;
       align-items: center;
       gap: 10px;
     }
 
     .form-alert.error {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: #fca5a5;
+      background: #FEE2E2;
+      border: 1px solid #FCA5A5;
+      color: #991B1B;
     }
 
     .form-alert.success {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      color: #6ee7b7;
+      background: #D1FAE5;
+      border: 1px solid #6EE7B7;
+      color: #065F46;
     }
 
     /* Submit Button */
     .btn-submit-competition {
       width: 100%;
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+      background: var(--gold-primary);
       color: #ffffff;
       border: none;
       padding: 15px 24px;
@@ -563,8 +530,8 @@
       font-weight: 800;
       letter-spacing: 0.4px;
       cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 6px 20px rgba(217, 119, 6, 0.45);
+      transition: all 0.2s ease;
+      box-shadow: 0 8px 20px var(--gold-glow);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -574,8 +541,8 @@
 
     .btn-submit-competition:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 28px rgba(217, 119, 6, 0.6);
-      filter: brightness(1.06);
+      box-shadow: 0 12px 26px var(--gold-glow);
+      background: var(--gold-dark);
     }
 
     .btn-submit-competition:active {
@@ -599,6 +566,7 @@
         opacity: 0;
         transform: scale(0.95) translateY(12px);
       }
+
       to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -606,19 +574,19 @@
     }
 
     .official-pass {
-      background: radial-gradient(circle at 50% 0%, #064e3b 0%, #022c22 80%);
-      border: 2px solid var(--gold-primary);
+      background: #FFFFFF;
+      border: 2px solid var(--gold-border);
       border-radius: 24px;
       padding: 32px 26px;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(245, 158, 11, 0.2);
+      box-shadow: 0 16px 40px rgba(166, 123, 36, 0.15);
       text-align: center;
       position: relative;
       overflow: hidden;
     }
 
     .pass-gold-ribbon {
-      background: linear-gradient(90deg, #d97706, #f59e0b, #fbbf24, #d97706);
-      color: #1f2937;
+      background: var(--gold-primary);
+      color: #FFFFFF;
       font-family: var(--font-heading);
       font-weight: 800;
       font-size: 0.8rem;
@@ -626,20 +594,18 @@
       text-transform: uppercase;
       padding: 6px 0;
       margin: -32px -26px 24px -26px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
 
     .pass-trophy-icon {
       font-size: 3.5rem;
       margin-bottom: 8px;
-      filter: drop-shadow(0 4px 12px rgba(245, 158, 11, 0.4));
     }
 
     .pass-reg-badge {
       display: inline-block;
-      background: rgba(245, 158, 11, 0.18);
-      border: 1px solid var(--gold-primary);
-      color: #fef3c7;
+      background: var(--gold-light);
+      border: 1.5px solid var(--gold-border);
+      color: var(--gold-dark);
       font-family: var(--font-heading);
       font-size: 1.15rem;
       font-weight: 800;
@@ -654,8 +620,8 @@
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       text-align: left;
-      background: rgba(2, 36, 27, 0.7);
-      border: 1px solid var(--emerald-border);
+      background: #FFFFFF;
+      border: 1.5px solid #E5E7EB;
       border-radius: 14px;
       padding: 16px;
       margin-bottom: 22px;
@@ -663,7 +629,7 @@
 
     .pass-item-label {
       font-size: 0.75rem;
-      color: #9ca3af;
+      color: var(--text-muted);
       text-transform: uppercase;
       font-weight: 700;
       letter-spacing: 0.4px;
@@ -672,8 +638,8 @@
     .pass-item-val {
       font-family: var(--font-heading);
       font-size: 0.95rem;
-      font-weight: 700;
-      color: #ffffff;
+      font-weight: 800;
+      color: var(--text-dark);
       margin-top: 2px;
     }
 
@@ -685,9 +651,9 @@
     }
 
     .btn-pass-print {
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      color: #ffffff;
+      background: #F3F4F6;
+      border: 1.5px solid #D1D5DB;
+      color: var(--text-dark);
       padding: 11px 20px;
       border-radius: 12px;
       font-weight: 700;
@@ -700,11 +666,11 @@
     }
 
     .btn-pass-print:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: #E5E7EB;
     }
 
     .btn-pass-garden {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
+      background: var(--gold-primary);
       border: none;
       color: #ffffff;
       padding: 11px 24px;
@@ -715,7 +681,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);
+      box-shadow: 0 4px 14px var(--gold-glow);
     }
 
     /* Print media style for pass */
@@ -724,6 +690,7 @@
         background: #ffffff !important;
         color: #111827 !important;
       }
+
       .top-header,
       .ambient-orb-1,
       .ambient-orb-2,
@@ -733,16 +700,19 @@
       #competition-form-view {
         display: none !important;
       }
+
       .pass-card-container {
         display: block !important;
         max-width: 100% !important;
       }
+
       .official-pass {
         border: 2px solid #000000 !important;
         background: #ffffff !important;
         color: #000000 !important;
         box-shadow: none !important;
       }
+
       .pass-item-val {
         color: #000000 !important;
       }
@@ -753,19 +723,26 @@
       .main-wrapper {
         padding: 20px 14px 40px 14px;
       }
+
       .form-card {
         padding: 24px 18px;
         border-radius: 18px;
       }
+
       .form-row {
         flex-direction: column;
         gap: 14px;
       }
+
       .hero-heading {
         font-size: 1.65rem;
       }
+
       .pass-grid {
         grid-template-columns: 1fr;
+      }
+      .hide-mobile-header {
+        display: none !important;
       }
     }
   </style>
@@ -780,7 +757,7 @@
   <!-- Top Navigation Header -->
   <header class="top-header">
     <a href="../index.html" class="btn-back-garden" id="btn-back-garden">
-      <i class="fa-solid fa-arrow-left"></i> Return to Garden
+      <i class="fa-solid fa-arrow-left"></i> <span class="hide-mobile-header">Return to Garden</span>
     </a>
 
     <a href="../index.html" class="portal-logo-wrap">
@@ -788,7 +765,7 @@
     </a>
 
     <span class="portal-badge">
-      <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> Championship
+      <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span class="hide-mobile-header">Championship</span>
     </span>
   </header>
 
@@ -796,13 +773,13 @@
   <main class="main-wrapper">
     <!-- Header Hero Introduction -->
     <div class="form-hero">
-      <div class="arabic-salutation">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
       <div class="hero-title-tag">
         <i class="fa-solid fa-trophy"></i> Official Competition Entry Portal 2026
       </div>
-      <h1 class="hero-heading">Flowers of Quran<br><span>Grand Championship</span></h1>
+      <h1 class="hero-heading">Flowers of Quran<br></h1>
       <p class="hero-subtitle">
-        Welcome to the annual Quranic learning competition! Please complete all fields in order and submit your Flowers of Quran Certificate to finalize your official participation.
+        Welcome to the annual Quranic learning competition! Please complete all fields in order and submit your Flowers
+        of Quran Certificate to finalize your official participation.
       </p>
     </div>
 
@@ -822,17 +799,19 @@
         <!-- 1. Full Name (Required) -->
         <div class="form-group">
           <label for="comp-name">
-            <span class="label-left"><i class="fa-solid fa-user" style="color: var(--gold-primary);"></i> Full Name (Student)</span>
+            <span class="label-left"><i class="fa-solid fa-user" style="color: var(--gold-primary);"></i> Full Name
+              (Student)</span>
             <span class="req-star">* Required</span>
           </label>
-          <input type="text" id="comp-name" class="input-control uppercase-input"
-            placeholder="e.g. MOHAMMED AHMED" required autocomplete="name">
+          <input type="text" id="comp-name" class="input-control uppercase-input" placeholder="e.g. MOHAMMED AHMED"
+            required autocomplete="name">
         </div>
 
         <!-- 2. Father's Name (Required) -->
         <div class="form-group">
           <label for="comp-father-name">
-            <span class="label-left"><i class="fa-solid fa-user-tie" style="color: var(--gold-primary);"></i> Father's Name</span>
+            <span class="label-left"><i class="fa-solid fa-user-tie" style="color: var(--gold-primary);"></i> Father's
+              Name</span>
             <span class="req-star">* Required</span>
           </label>
           <input type="text" id="comp-father-name" class="input-control uppercase-input"
@@ -848,28 +827,30 @@
         <!-- 3. Phone Number (Required: [+] [Country Code] & [Mobile Number]) -->
         <div class="form-group">
           <label for="comp-phone-num">
-            <span class="label-left"><i class="fa-solid fa-phone" style="color: var(--gold-primary);"></i> Mobile Phone Number</span>
+            <span class="label-left"><i class="fa-solid fa-phone" style="color: var(--gold-primary);"></i> Mobile Phone
+              Number</span>
             <span class="req-star">* Required</span>
           </label>
           <div class="comp-phone-dual">
             <div class="comp-code-wrap">
               <span class="comp-plus">+</span>
-              <input type="tel" id="comp-country-code" class="comp-code-input"
-                placeholder="91" value="91" maxlength="4" autocomplete="tel-country-code" title="Calling Code">
+              <input type="tel" id="comp-country-code" class="comp-code-input" placeholder="91" value="91" maxlength="4"
+                autocomplete="tel-country-code" title="Calling Code">
             </div>
-            <input type="tel" id="comp-phone-num" class="input-control"
-              placeholder="Enter mobile number" maxlength="15" autocomplete="tel-national" required>
+            <input type="tel" id="comp-phone-num" class="input-control" placeholder="Enter mobile number" maxlength="15"
+              autocomplete="tel-national" required>
           </div>
         </div>
 
         <!-- 4. Email Address (Optional) -->
         <div class="form-group">
           <label for="comp-email">
-            <span class="label-left"><i class="fa-solid fa-envelope" style="color: var(--gold-primary);"></i> Email Address</span>
+            <span class="label-left"><i class="fa-solid fa-envelope" style="color: var(--gold-primary);"></i> Email
+              Address</span>
             <span class="optional-badge">Optional</span>
           </label>
-          <input type="email" id="comp-email" class="input-control"
-            placeholder="student@example.com (optional)" autocomplete="email">
+          <input type="email" id="comp-email" class="input-control" placeholder="student@example.com (optional)"
+            autocomplete="email">
         </div>
 
         <!-- SECTION 3: DEMOGRAPHIC DETAILS -->
@@ -882,16 +863,17 @@
         <div class="form-row">
           <div class="form-col form-group">
             <label for="comp-age">
-              <span class="label-left"><i class="fa-solid fa-cake-candles" style="color: var(--gold-primary);"></i> Age</span>
+              <span class="label-left"><i class="fa-solid fa-cake-candles" style="color: var(--gold-primary);"></i>
+                Age</span>
               <span class="req-star">* Required</span>
             </label>
-            <input type="number" id="comp-age" class="input-control"
-              placeholder="e.g. 11" min="4" max="80" required>
+            <input type="number" id="comp-age" class="input-control" placeholder="e.g. 11" min="4" max="80" required>
           </div>
 
           <div class="form-col form-group">
             <label for="comp-gender">
-              <span class="label-left"><i class="fa-solid fa-venus-mars" style="color: var(--gold-primary);"></i> Gender</span>
+              <span class="label-left"><i class="fa-solid fa-venus-mars" style="color: var(--gold-primary);"></i>
+                Gender</span>
               <span class="req-star">* Required</span>
             </label>
             <select id="comp-gender" class="input-control" required>
@@ -911,9 +893,16 @@
         <!-- Certificate ID / Number -->
         <div class="form-group">
           <label for="comp-cert-number">
-            <span class="label-left"><i class="fa-solid fa-certificate" style="color: var(--gold-primary);"></i> Flowers of Quran Certificate ID / Number</span>
+            <span class="label-left"><i class="fa-solid fa-certificate" style="color: var(--gold-primary);"></i> Flowers
+              of Quran Certificate ID / Number
+              <i class="fa-solid fa-circle-question" style="color: var(--text-muted); cursor: pointer; margin-left: 6px; font-size: 0.9em;" onclick="const info = document.getElementById('cert-info-text'); info.style.display = info.style.display === 'none' ? 'block' : 'none';" title="Click for info"></i>
+            </span>
             <span class="req-star">* Required</span>
           </label>
+          <div id="cert-info-text" style="display: none; font-size: 0.8rem; color: var(--text-dark); background: #FFF9E6; border: 1.5px solid var(--gold-border); padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-weight: 600;">
+            <i class="fa-solid fa-circle-info" style="color: var(--gold-dark); margin-right: 4px;"></i>
+            A valid Certificate of Completion is automatically awarded to students who successfully finish reading all 24 chapters and pass every quiz in the Learning Garden.
+          </div>
           <input type="text" id="comp-cert-number" class="input-control uppercase-input"
             placeholder="e.g. FOQ-CERT-2026-042" required>
         </div>
@@ -921,7 +910,8 @@
         <!-- Certificate File Upload (Optional / Recommended) -->
         <div class="form-group">
           <label>
-            <span class="label-left"><i class="fa-solid fa-file-arrow-up" style="color: var(--gold-primary);"></i> Certificate Document / Photo</span>
+            <span class="label-left"><i class="fa-solid fa-file-arrow-up" style="color: var(--gold-primary);"></i>
+              Certificate Document / Photo</span>
             <span class="optional-badge">Attach Proof</span>
           </label>
           <div class="cert-upload-zone" id="cert-upload-dropzone">
@@ -948,7 +938,8 @@
         <label class="confirm-checkbox-wrap" for="comp-cert-confirm">
           <input type="checkbox" id="comp-cert-confirm" required>
           <span class="confirm-checkbox-label">
-            I confirm that I have studied all 234 Flowers of the Quran, completed the required lessons, and currently hold a valid Certificate of Completion for the 2026 Championship.
+            I confirm that I have studied all 234 Flowers of the Quran, completed the required lessons, and currently
+            hold a valid Certificate of Completion for the 2026 Championship.
           </span>
         </label>
 
@@ -966,10 +957,10 @@
           </div>
 
           <div class="pass-trophy-icon">🏆</div>
-          <h2 style="font-family: var(--font-heading); font-size: 1.7rem; color: #ffffff; margin-bottom: 4px;">
+          <h2 style="font-family: var(--font-heading); font-size: 1.7rem; color: var(--text-dark); margin-bottom: 4px;">
             Registration Confirmed!
           </h2>
-          <p style="color: var(--text-emerald); font-size: 0.95rem; font-weight: 600;">
+          <p style="color: var(--success); font-size: 0.95rem; font-weight: 700;">
             Alhamdulillah, your competition entry has been accepted.
           </p>
 
@@ -1000,13 +991,15 @@
             </div>
             <div>
               <div class="pass-item-label">Entry Status</div>
-              <div class="pass-item-val" style="color: #34d399;">✅ Verified Candidate</div>
+              <div class="pass-item-val" style="color: var(--success);">✅ Verified Candidate</div>
             </div>
           </div>
 
-          <div style="background: rgba(2, 36, 27, 0.6); border-radius: 12px; padding: 14px; margin-bottom: 22px; text-align: left; font-size: 0.85rem; color: #d1d5db; line-height: 1.5;">
-            <strong style="color: var(--gold-primary);">📅 Next Steps:</strong>
-            Keep this Registration ID safe. Online tournament instructions, stage groupings, and the competition schedule will be communicated to your registered mobile phone number.
+          <div
+            style="background: var(--gold-light); border: 1.5px solid var(--gold-border); border-radius: 12px; padding: 14px; margin-bottom: 22px; text-align: left; font-size: 0.85rem; color: var(--text-dark); line-height: 1.5; font-weight: 600;">
+            <strong style="color: var(--gold-dark);">📅 Next Steps:</strong>
+            Keep this Registration ID safe. Online tournament instructions, stage groupings, and the competition
+            schedule will be communicated to your registered mobile phone number.
           </div>
 
           <div class="pass-actions">
@@ -1023,7 +1016,8 @@
   </main>
 
   <!-- Canvas for Confetti -->
-  <canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1000;"></canvas>
+  <canvas id="confetti-canvas"
+    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1000;"></canvas>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -1058,7 +1052,7 @@
             }
           }
         }
-      } catch (e) {}
+      } catch (e) { }
 
       // Auto-suggest certificate ID if user completed course locally
       try {
@@ -1071,7 +1065,7 @@
             document.getElementById('comp-cert-number').value = `FOQ-2026-CERT-${randomCode}`;
           }
         }
-      } catch (e) {}
+      } catch (e) { }
 
       // File upload dropzone interaction
       if (dropzone && fileInput) {
@@ -1276,7 +1270,7 @@
               const existing = JSON.parse(localStorage.getItem('flowers_competition_submissions') || '[]');
               existing.push(record);
               localStorage.setItem('flowers_competition_submissions', JSON.stringify(existing));
-            } catch (e) {}
+            } catch (e) { }
 
             // Populate Pass View
             document.getElementById('pass-display-regid').textContent = regId;

@@ -130,13 +130,18 @@
               <div class="step-card"><b>4</b><i class="fa-solid fa-award"></i><span>Reward</span></div>
             </div>
           </div>
-          
+
           <!-- Image added below mini board -->
-          <div style="position: relative; display: inline-block; width: 100%; margin-top: 20px;">
-            <img src="assets/images/flowers-of-quran.svg" alt="Flowers of Quran Competition" class="hero-mockup-img" id="competition-img" style="cursor: pointer; width: 100%; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);" />
-            <a href="pages/competition-form.html" style="position: absolute; bottom: 15px; right: 15px; background: white; color: #d97706; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: transform 0.2s, box-shadow 0.2s; z-index: 10; font-family: var(--font-body);" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)';">
-              Know more ➔
-            </a>
+          <div
+            style="position: relative; width: 100%; max-width: 380px; display: flex; justify-content: center; align-items: center;">
+
+            <img src="assets/images/web_designe_high_quality.svg" alt="Flowers of Quran Competition"
+              class="hero-mockup-img" id="competition-img"
+              style="cursor: pointer; width: 100%; margin: 0; padding: 0;" />
+
+            <!-- ====== ADJUST BUTTON POSITION HERE ====== -->
+            <!-- Change 'top' and 'left' percentages, or use 'margin-top' and 'margin-left' values to fine-tune -->
+
           </div>
         </div>
 
@@ -177,7 +182,28 @@
     <!-- 24 FLOWER QUIZ GARDEN SECTION (White Themed, No Stars) -->
     <main class="quiz-garden-section" id="garden-section">
       <div class="section-header">
-        <h2 class="section-main-title">Flowers of Quran - The Learning Garden</h2>
+        <style>
+          .title-dash {
+            display: inline;
+          }
+
+          .title-break {
+            display: none;
+          }
+
+          @media (max-width: 640px) {
+            .title-dash {
+              display: none;
+            }
+
+            .title-break {
+              display: block;
+              height: 2px;
+            }
+          }
+        </style>
+        <h2 class="section-main-title">Flowers of Quran<span class="title-dash"> - </span><span
+            class="title-break"></span>The Learning Garden</h2>
         <p class="section-sub-title">Read the 10-page study material and complete the 3-question quiz to unlock the next
           flower!</p>
       </div>
@@ -356,7 +382,8 @@
               Study Flower 2 ➔
             </button>
           </div>
-          <button class="btn-next-question" id="btn-victory-download-cert" style="display: none; background-color: #10B981; margin-top: 16px; width: 100%;">
+          <button class="btn-next-question" id="btn-victory-download-cert"
+            style="display: none; background-color: #10B981; margin-top: 16px; width: 100%;">
             📥 Download Certificate
           </button>
         </div>
@@ -468,12 +495,16 @@
         <button class="btn-close-modal" id="btn-close-certificate">✕</button>
       </div>
       <div class="modal-body" style="padding: 24px; text-align: center;">
-        <p style="margin-bottom: 20px; font-size: 1.1rem; color: #4B5563;">Congratulations on completing all 24 Flowers of Quran!</p>
-        
+        <p style="margin-bottom: 20px; font-size: 1.1rem; color: #4B5563;">Congratulations on completing all 24 Flowers
+          of Quran!</p>
+
         <!-- Preview of the certificate image (Scaled down to fit screen without scrolling) -->
-        <div style="position: relative; display: inline-block; width: 100%; max-width: 380px; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-          <img src="assets/downloads/FLOWERS OF QURAN CERTIFICATE.jpg.jpeg" alt="Certificate Preview" style="width: 100%; display: block;">
-          <div id="cert-preview-name" style="position: absolute; top: 46.2%; left: 50%; transform: translate(-50%, -100%); margin-top: -4px; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 19px; color: #000; text-align: center; width: 100%; text-transform: uppercase;">
+        <div
+          style="position: relative; display: inline-block; width: 100%; max-width: 380px; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <img src="assets/downloads/FLOWERS OF QURAN CERTIFICATE.jpg.jpeg" alt="Certificate Preview"
+            style="width: 100%; display: block;">
+          <div id="cert-preview-name"
+            style="position: absolute; top: 46.2%; left: 50%; transform: translate(-50%, -100%); margin-top: -4px; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 19px; color: #000; text-align: center; width: 100%; text-transform: uppercase;">
             STUDENT NAME
           </div>
         </div>
@@ -511,8 +542,8 @@
           <div id="field-auth-name" class="register-only-field"
             style="display: none; margin-bottom: 12px; text-align: left;">
             <label style="display:block; font-weight:700; margin-bottom:5px; font-size:0.9rem;">Full Name</label>
-            <input type="text" id="auth-name" class="option-btn" style="width:100%; cursor:text; padding:10px 14px; text-transform: uppercase;"
-              placeholder="Full Name">
+            <input type="text" id="auth-name" class="option-btn"
+              style="width:100%; cursor:text; padding:10px 14px; text-transform: uppercase;" placeholder="Full Name">
           </div>
 
           <!-- International Phone Number Field: [+] [Country Code] and [Phone Number] -->
@@ -528,11 +559,11 @@
             <div class="direct-phone-group" id="intl-input-group">
               <div class="country-code-wrap">
                 <span class="plus-addon">+</span>
-                <input type="tel" id="auth-country-code-input" class="country-code-box"
-                  placeholder="91" value="91" maxlength="4" autocomplete="tel-country-code" title="Enter country calling code (e.g. 91, 971, 1)">
+                <input type="tel" id="auth-country-code-input" class="country-code-box" placeholder="91" value="91"
+                  maxlength="4" autocomplete="tel-country-code" title="Enter country calling code (e.g. 91, 971, 1)">
               </div>
-              <input type="tel" id="auth-phone-num" class="phone-number-box"
-                placeholder="Mobile number" maxlength="15" autocomplete="tel-national" required>
+              <input type="tel" id="auth-phone-num" class="phone-number-box" placeholder="Mobile number" maxlength="15"
+                autocomplete="tel-national" required>
             </div>
 
             <!-- Hidden native select kept for compatibility -->
@@ -544,16 +575,19 @@
           <!-- Register Only Field: Email Address (Optional) -->
           <div id="field-auth-email" class="register-only-field"
             style="display: none; margin-bottom: 12px; text-align: left;">
-            <label style="display:flex; justify-content:space-between; align-items:center; font-weight:700; margin-bottom:5px; font-size:0.9rem;">
+            <label
+              style="display:flex; justify-content:space-between; align-items:center; font-weight:700; margin-bottom:5px; font-size:0.9rem;">
               <span>📧 Email Address</span>
-              <span style="font-size:0.75rem; color:#6b7280; font-weight:600; background:#f3f4f6; padding:1px 6px; border-radius:4px;">Optional</span>
+              <span
+                style="font-size:0.75rem; color:#6b7280; font-weight:600; background:#f3f4f6; padding:1px 6px; border-radius:4px;">Optional</span>
             </label>
             <input type="email" id="auth-email" class="option-btn" style="width:100%; cursor:text; padding:10px 14px;"
               placeholder="name@example.com (optional)">
           </div>
 
           <!-- Register Only Row: Age & Gender side-by-side -->
-          <div class="register-only-field" id="row-auth-age-gender" style="display: none; gap: 10px; margin-bottom: 12px; text-align: left;">
+          <div class="register-only-field" id="row-auth-age-gender"
+            style="display: none; gap: 10px; margin-bottom: 12px; text-align: left;">
             <div id="field-auth-age" style="flex: 1;">
               <label style="display:block; font-weight:700; margin-bottom:4px; font-size:0.88rem;">Age</label>
               <input type="number" id="auth-age" class="option-btn" style="width:100%; cursor:text; padding:9px 12px;"
@@ -613,15 +647,19 @@
   <div class="modal-overlay" id="guest-warning-modal">
     <div class="modal-card" style="max-width: 420px; text-align: center; padding: 28px 22px;">
       <div style="font-size: 2.8rem; margin-bottom: 8px;">⚠️</div>
-      <h3 style="font-family: var(--font-heading); font-size: 1.4rem; margin-bottom: 8px; color: #111;">Progress Not Saved!</h3>
+      <h3 style="font-family: var(--font-heading); font-size: 1.4rem; margin-bottom: 8px; color: #111;">Progress Not
+        Saved!</h3>
       <p style="font-size: 0.95rem; color: #555; line-height: 1.5; margin-bottom: 22px;">
-        You are currently exploring as a guest. Your quiz progress and unlocked flowers will not be saved. Register or log in to keep your progress!
+        You are currently exploring as a guest. Your quiz progress and unlocked flowers will not be saved. Register or
+        log in to keep your progress!
       </p>
       <div style="display: flex; flex-direction: column; gap: 10px; justify-content: center;">
-        <button type="button" id="btn-guest-login" class="btn-next-question" style="margin: 0; padding: 10px 14px; cursor: pointer;">
+        <button type="button" id="btn-guest-login" class="btn-next-question"
+          style="margin: 0; padding: 10px 14px; cursor: pointer;">
           Log In / Register
         </button>
-        <button type="button" id="btn-guest-continue" class="option-btn" style="padding: 10px 14px; font-weight: 600; cursor: pointer; background: #f3f4f6;">
+        <button type="button" id="btn-guest-continue" class="option-btn"
+          style="padding: 10px 14px; font-weight: 600; cursor: pointer; background: #f3f4f6;">
           Continue as Guest
         </button>
       </div>
@@ -637,7 +675,8 @@
         <h2 style="font-family: var(--font-heading); font-size: 1.6rem; color: #fff;">Competition Details</h2>
       </div>
       <div class="modal-body" style="padding: 24px; text-align: left; line-height: 1.6;">
-        <h3 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--gold-dark); margin-bottom: 10px; font-weight: 700;">
+        <h3
+          style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--gold-dark); margin-bottom: 10px; font-weight: 700;">
           Thank you for your interest in joining the ‘Flowers of Quran’ Competition! 🌸
         </h3>
         <p style="margin-bottom: 14px; color: #4B5563;">
@@ -647,13 +686,15 @@
           <li style="margin-bottom: 8px;">Register online for the ‘Flowers of Quran’ course.</li>
           <li style="margin-bottom: 8px;">Study all 234 Flowers of Quran carefully.</li>
           <li style="margin-bottom: 8px;">Complete the course and obtain your Certificate of Completion.</li>
-          <li style="margin-bottom: 8px;">Submit your request to join the competition through the competition portal.</li>
+          <li style="margin-bottom: 8px;">Submit your request to join the competition through the competition portal.
+          </li>
           <li style="margin-bottom: 8px;">Be available online at the scheduled date and time of the competition.</li>
         </ol>
 
         <!-- Bottom Right Action: Fill out the form to join button -->
-        <div style="display: flex; justify-content: flex-end; margin-top: 20px; padding-top: 14px; border-top: 1px solid #f3f4f6;">
-          <a href="pages/competition-form.html" class="btn-next-question" id="btn-goto-competition-form"
+        <div
+          style="display: flex; justify-content: flex-end; margin-top: 20px; padding-top: 14px; border-top: 1px solid #f3f4f6;">
+          <a href="participant/competition-form.html" class="btn-next-question" id="btn-goto-competition-form"
             style="text-decoration: none; margin: 0; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; padding: 12px 22px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35); color: #fff; cursor: pointer; font-size: 0.95rem;">
             Fill out the form to join ➔
           </a>
@@ -667,20 +708,20 @@
       const compImg = document.getElementById('competition-img');
       const compModal = document.getElementById('competition-modal');
       const closeComp = document.getElementById('btn-close-competition');
-      
-      if(compImg && compModal) {
+
+      if (compImg && compModal) {
         compImg.addEventListener('click', () => {
           compModal.classList.add('active');
         });
       }
-      
-      if(closeComp && compModal) {
+
+      if (closeComp && compModal) {
         closeComp.addEventListener('click', () => {
           compModal.classList.remove('active');
         });
       }
-      
-      if(compModal) {
+
+      if (compModal) {
         compModal.addEventListener('click', (e) => {
           if (e.target === compModal) {
             compModal.classList.remove('active');

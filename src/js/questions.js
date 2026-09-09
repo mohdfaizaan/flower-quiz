@@ -274,9 +274,9 @@ const FLOWERS_DATA = [
       },
       {
         question: "Whose footsteps we should not follow?",
-        options: ["Good people", "Satan"],
+        options: ["Good people", "Shaitan"],
         correct: 1,
-        explanation: "We must avoid following the whispers and footsteps of Satan."
+        explanation: "We must avoid following the whispers and footsteps of shaitan."
       }
     ]
   },
@@ -290,9 +290,9 @@ const FLOWERS_DATA = [
     questions: [
       {
         question: "Who is our enemy?",
-        options: ["I don't know", "Satan"],
+        options: ["I don't know", "Shaitan"],
         correct: 1,
-        explanation: "Satan (Shaytan) is an open enemy to humanity."
+        explanation: "shaitan (Shaitan) is an open enemy to humanity."
       },
       {
         question: "Whom did Allah teach the names of all things?",
@@ -330,7 +330,7 @@ const FLOWERS_DATA = [
       },
       {
         question: "Who should we obey for guidance?",
-        options: ["The Messenger", "Satan"],
+        options: ["The Messenger", "shaitan"],
         correct: 0,
         explanation: "We follow Allah's Messenger ﷺ for authentic guidance."
       }
@@ -541,10 +541,10 @@ const FLOWERS_DATA = [
     icon: "🌹",
     questions: [
       {
-        question: "To whom did Allah give the Gospel?",
-        options: ["Moses", "Jesus"],
+        question: "To whom did Allah give the Injeel?",
+        options: ["Musa", "Isa"],
         correct: 1,
-        explanation: "Allah revealed the Gospel (Injeel) to Prophet Isa (Jesus)."
+        explanation: "Allah revealed the Injeel to Prophet Isa."
       },
       {
         question: "Is the Qur'an easy or difficult to remember?",
