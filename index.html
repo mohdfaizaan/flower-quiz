@@ -748,9 +748,103 @@
   <canvas id="confetti-canvas"></canvas>
 
   <!-- Floating Playstore Button -->
-  <a href="#" class="floating-playstore-btn" target="_blank" title="Download on Google Play">
-    <i class="fa-brands fa-google-play"></i>
-  </a>
+  <div class="floating-playstore-wrapper" id="playstore-wrapper">
+    <span class="floating-playstore-text" id="playstore-text">Download the app for a better Quran Understanding experience.</span>
+    <a href="#" class="floating-playstore-btn" id="playstore-icon" target="_blank" title="Download on Google Play">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/Google_Play_Arrow_logo.svg" width="28" height="28" alt="Google Play" draggable="false">
+    </a>
+  </div>
+
+  <script>
+    // Drag-to-dismiss for the floating Play Store widget
+    (() => {
+      const wrapper = document.getElementById('playstore-wrapper');
+      const icon = document.getElementById('playstore-icon');
+      const text = document.getElementById('playstore-text');
+      if (!wrapper || !icon) return;
+
+      let startX = 0, currentX = 0, dragging = false, dismissed = false;
+
+      function onStart(e) {
+        if (dismissed) return;
+        dragging = true;
+        startX = (e.touches ? e.touches[0].clientX : e.clientX);
+        wrapper.style.transition = 'none';
+        e.preventDefault();
+      }
+
+      function onMove(e) {
+        if (!dragging) return;
+        currentX = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
+        if (currentX < 0) currentX = 0;
+        wrapper.style.transform = `translateX(${currentX}px)`;
+        const opacity = Math.max(0, 1 - currentX / 80);
+        if (text) text.style.opacity = opacity;
+      }
+
+      function onEnd() {
+        if (!dragging) return;
+        dragging = false;
+        wrapper.style.transition = 'transform 0.35s ease';
+
+        if (currentX > 60) {
+          // Dismiss: hide text completely, show only half of the icon
+          dismissed = true;
+          if (text) {
+            text.style.opacity = '0';
+            text.style.display = 'none';
+          }
+          // Calculate offset: full wrapper width minus half the icon (30px)
+          const iconSize = icon.offsetWidth || 60;
+          wrapper.style.transform = `translateX(calc(100% - ${iconSize / 2}px))`;
+          icon.style.animation = 'none';
+          icon.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+        } else {
+          // Snap back
+          wrapper.style.transform = 'translateX(0)';
+          if (text) text.style.opacity = '1';
+        }
+        currentX = 0;
+      }
+
+      // Click the peeking half-icon to bring everything back fresh
+      icon.addEventListener('click', (e) => {
+        if (dismissed) {
+          e.preventDefault();
+          e.stopPropagation();
+          dismissed = false;
+
+          // Show text again and replay the slide-in animation
+          if (text) {
+            text.style.display = '';
+            text.style.opacity = '0';
+            // Force animation restart
+            text.style.animation = 'none';
+            void text.offsetWidth; // trigger reflow
+            text.style.animation = 'fadeSlideIn 0.5s ease forwards';
+          }
+
+          // Restore icon glow
+          icon.style.animation = '';
+          icon.style.boxShadow = '';
+
+          // Slide wrapper back
+          wrapper.style.transition = 'transform 0.35s ease';
+          wrapper.style.transform = 'translateX(0)';
+        }
+      });
+
+      // Mouse events
+      icon.addEventListener('mousedown', onStart);
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onEnd);
+
+      // Touch events
+      icon.addEventListener('touchstart', onStart, { passive: false });
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onEnd);
+    })();
+  </script>
 
   <script src="src/js/questions.js?v=11.0"></script>
   <script src="src/js/audio.js?v=11.0"></script>
