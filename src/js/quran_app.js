@@ -155,18 +155,7 @@ class FlowersOfQuranApp {
   }
 
   applyCachedAuthState() {
-    try {
-      const cached = localStorage.getItem('quran_user_logged_in');
-      if (cached) {
-        const u = JSON.parse(cached);
-        if (this.btnLoginNav) this.btnLoginNav.style.display = 'none';
-        if (this.btnRegisterNav) this.btnRegisterNav.style.display = 'none';
-        if (this.btnLogoutNav) {
-          this.btnLogoutNav.style.display = 'inline-flex';
-          this.btnLogoutNav.textContent = '🚪 Sign Out';
-        }
-      }
-    } catch(e) {}
+    // Wait for a real Supabase session before showing signed-in controls.
   }
 
   init() {
@@ -252,10 +241,17 @@ class FlowersOfQuranApp {
   initCloudAuth() {
     if (!this.cloud) return;
     this.cloud.init(async (user) => {
+      if (this.state.authUser?.id !== user?.id) {
+        this.preparedCertificate = null;
+        this.certificatePreviewRequest = (this.certificatePreviewRequest || 0) + 1;
+        this.certificateModal?.classList.remove('active');
+        const numberEl = document.getElementById('cert-preview-number');
+        if (numberEl) { numberEl.textContent = ''; numberEl.hidden = true; }
+      }
       this.state.authUser = user;
       if (user) {
         const displayName = user.user_metadata?.name || user.phone || (user.email ? user.email.split('@')[0] : 'Profile');
-        localStorage.setItem('quran_user_logged_in', JSON.stringify({ phone: user.phone, email: user.email, name: displayName }));
+        localStorage.setItem('quran_user_logged_in', JSON.stringify({ id: user.id, phone: user.phone, email: this.cloud.contactEmail(user), name: displayName }));
         if (this.btnLoginNav) this.btnLoginNav.style.display = 'none';
         if (this.btnRegisterNav) this.btnRegisterNav.style.display = 'none';
         if (this.btnLogoutNav) {
@@ -432,26 +428,7 @@ class FlowersOfQuranApp {
 
     if (this.btnVictoryDownloadCert) {
       this.btnVictoryDownloadCert.addEventListener('click', () => {
-        if (this.certificateModal) {
-          const previewNameEl = document.getElementById('cert-preview-name');
-          if (previewNameEl) {
-            let userName = "STUDENT";
-            try {
-              const cached = localStorage.getItem('quran_user_logged_in');
-              if (cached) {
-                const parsed = JSON.parse(cached);
-                if (parsed.name && parsed.name.trim() !== '') {
-                  userName = parsed.name;
-                } else if (parsed.phone) {
-                  userName = parsed.phone;
-                }
-              }
-            } catch(e) {}
-            previewNameEl.textContent = userName;
-          }
-          if (this.modalOverlay) this.modalOverlay.classList.remove('active'); // Close quiz modal
-          this.certificateModal.classList.add('active'); // Open cert preview
-        }
+        void this.openCertificate();
       });
     }
 
@@ -931,107 +908,112 @@ class FlowersOfQuranApp {
       `;
 
       certCard.addEventListener('click', () => {
-        if (this.certificateModal) {
-          const previewNameEl = document.getElementById('cert-preview-name');
-          if (previewNameEl) {
-            let userName = "STUDENT";
-            try {
-              const cached = localStorage.getItem('quran_user_logged_in');
-              if (cached) {
-                const parsed = JSON.parse(cached);
-                if (parsed.name && parsed.name.trim() !== '') {
-                  userName = parsed.name;
-                } else if (parsed.phone) {
-                  userName = parsed.phone;
-                }
-              }
-            } catch(e) {}
-            previewNameEl.textContent = userName;
-          }
-          this.certificateModal.classList.add('active');
-        }
+        void this.openCertificate();
       });
 
       this.sectionsGrid.appendChild(certCard);
     }
   }
 
-  downloadCertificatePdf() {
-    if (this.btnDownloadPdfCert) {
-      this.btnDownloadPdfCert.textContent = "⏳ Generating PDF...";
-      this.btnDownloadPdfCert.disabled = true;
+  async prepareCertificate() {
+    const user = this.cloud?.currentUser;
+    if (!user) throw new Error('Please sign in to view your certificate.');
+    if (this.preparedCertificate?.userId === user.id) return this.preparedCertificate;
+    if (this.certificateRequest?.userId === user.id) return this.certificateRequest.promise;
+    const promise = (async () => {
+      const saved = await this.cloud.saveProgress(user.id, 'flowers_progress', {
+        unlocked: [...(this.state?.unlockedFlowers || [])],
+        completed: [...(this.state?.completedFlowers || [])]
+      });
+      if (!saved) throw new Error('Your progress could not be synced. Please try again.');
+      const number = await this.cloud.generateCertificateNumber(user.id, 'FQ');
+      if (this.cloud.currentUser?.id !== user.id) throw new Error('Your sign-in changed. Please try again.');
+      const certificate = { number, userId: user.id,
+        name: String(user.user_metadata?.name || user.phone || 'STUDENT').trim().toUpperCase() };
+      this.preparedCertificate = certificate;
+      return certificate;
+    })();
+    this.certificateRequest = { userId: user.id, promise };
+    try { return await promise; }
+    finally { if (this.certificateRequest?.promise === promise) this.certificateRequest = null; }
+  }
+
+  async openCertificate() {
+    if (!this.certificateModal) return;
+    const requestId = (this.certificatePreviewRequest || 0) + 1;
+    this.certificatePreviewRequest = requestId;
+    this.modalOverlay?.classList.remove('active');
+    this.certificateModal.classList.add('active');
+    const numberEl = document.getElementById('cert-preview-number');
+    const nameEl = document.getElementById('cert-preview-name');
+    const statusEl = document.getElementById('cert-preview-status');
+    if (numberEl) { numberEl.textContent = ''; numberEl.hidden = true; }
+    if (nameEl) nameEl.textContent = this.cloud?.currentUser?.user_metadata?.name || 'STUDENT';
+    if (statusEl) statusEl.textContent = 'Preparing your certificate number…';
+    if (this.btnDownloadPdfCert) this.btnDownloadPdfCert.disabled = true;
+    try {
+      const certificate = await this.prepareCertificate();
+      if (this.certificatePreviewRequest !== requestId || this.cloud.currentUser?.id !== certificate.userId) return;
+      if (numberEl) { numberEl.textContent = certificate.number; numberEl.hidden = false; }
+      if (nameEl) nameEl.textContent = certificate.name;
+      if (statusEl) statusEl.textContent = 'Your certificate is ready.';
+    } catch (error) {
+      if (statusEl && this.certificatePreviewRequest === requestId)
+        statusEl.textContent = error.message || 'Your certificate could not load. Use Download to retry.';
+    } finally {
+      if (this.btnDownloadPdfCert && this.certificatePreviewRequest === requestId && !this.certificateDownloadInProgress)
+        this.btnDownloadPdfCert.disabled = false;
     }
+  }
+
+  async downloadCertificatePdf() {
+    if (this.certificateDownloadInProgress) return;
+    this.certificateDownloadInProgress = true;
+    const btn = this.btnDownloadPdfCert;
+    const originalText = btn?.innerHTML || '📥 Download Certificate (PDF)';
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating PDF...'; }
 
     try {
+      const user = this.cloud?.currentUser;
+      if (!user) throw new Error('Please sign in to download your certificate.');
+      if (!window.jspdf?.jsPDF) throw new Error('The PDF service could not load. Refresh the page and try again.');
+      const certificate = await this.prepareCertificate();
+      const certNumber = certificate.number;
+      const userName = certificate.name;
+      const numberEl = document.getElementById('cert-preview-number');
+      if (numberEl) { numberEl.textContent = certNumber; numberEl.hidden = false; }
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        const timeout = setTimeout(() => reject(new Error('The certificate image took too long to load. Please try again.')), 20000);
+        image.onload = () => { clearTimeout(timeout); resolve(image); };
+        image.onerror = () => { clearTimeout(timeout); reject(new Error('The certificate image could not load. Please try again.')); };
+        image.src = 'assets/downloads/FLOWERS OF QURAN CERTIFICATE.jpg.jpeg';
+      });
+      if (this.cloud.currentUser?.id !== user.id) throw new Error('Your sign-in changed. Please try again.');
       const { jsPDF } = window.jspdf;
-
-      const img = new Image();
-      img.src = 'assets/downloads/FLOWERS OF QURAN CERTIFICATE.jpg.jpeg';
-      img.onload = () => {
-        // Use exact image dimensions to prevent any stretching
-        const imgWidth = img.width;
-        const imgHeight = img.height;
-        
-        // PDF orientation depends on image aspect ratio
-        const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
-        
-        const doc = new jsPDF({
-          orientation: orientation,
-          unit: 'px',
-          format: [imgWidth, imgHeight]
-        });
-
-        doc.addImage(img, 'JPEG', 0, 0, imgWidth, imgHeight);
-
-        let userName = "STUDENT";
-        try {
-          const cached = localStorage.getItem('quran_user_logged_in');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            if (parsed.name && parsed.name.trim() !== '') {
-              userName = parsed.name;
-            } else if (parsed.phone) {
-              userName = parsed.phone;
-            }
-          }
-        } catch(e) {}
-
-        userName = userName.toUpperCase();
-
-        doc.setFont("helvetica", "bold");
-        // Scale font size based on image width, increased size by 6
-        const fontSize = Math.max(42, (imgWidth * 0.045) + 6); 
-        doc.setFontSize(fontSize);
-        doc.setTextColor(0, 0, 0); // Black color
-        
-        // Use a slightly smaller percentage (45.0%) to push the text up in the PDF and create a margin above the line
-        const textY = imgHeight * 0.450;
-        doc.text(userName, imgWidth / 2, textY, { align: 'center' });
-
-        doc.save(`Flowers_of_Quran_Certificate_${userName.replace(/[^A-Z0-9]/g, '')}.pdf`);
-
-        if (this.btnDownloadPdfCert) {
-          this.btnDownloadPdfCert.textContent = "✅ Downloaded!";
-          setTimeout(() => {
-            this.btnDownloadPdfCert.textContent = "📥 Download Certificate (PDF)";
-            this.btnDownloadPdfCert.disabled = false;
-          }, 3000);
-        }
-      };
-      
-      img.onerror = () => {
-        alert("Failed to load certificate image.");
-        if (this.btnDownloadPdfCert) {
-          this.btnDownloadPdfCert.textContent = "📥 Download Certificate (PDF)";
-          this.btnDownloadPdfCert.disabled = false;
-        }
-      };
-    } catch(err) {
-      console.error("jsPDF Error:", err);
-      if (this.btnDownloadPdfCert) {
-        this.btnDownloadPdfCert.textContent = "📥 Download Certificate (PDF)";
-        this.btnDownloadPdfCert.disabled = false;
-      }
+      const imgWidth = img.width;
+      const imgHeight = img.height;
+      const doc = new jsPDF({
+        orientation: imgWidth > imgHeight ? 'landscape' : 'portrait',
+        unit: 'px', format: [imgWidth, imgHeight]
+      });
+      doc.addImage(img, 'JPEG', 0, 0, imgWidth, imgHeight);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(Math.max(42, (imgWidth * 0.045) + 6));
+      doc.setTextColor(0, 0, 0);
+      doc.text(userName, imgWidth / 2, imgHeight * 0.450, { align: 'center' });
+      // Matches the compact number beside the logo in the on-screen preview.
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(imgWidth * 0.027 * (doc.internal?.scaleFactor || 1));
+      doc.setTextColor(40, 45, 48);
+      doc.text(certNumber, imgWidth * 0.786, imgHeight * 0.13, { align: 'center', baseline: 'middle' });
+      doc.save('Flowers_of_Quran_Certificate_' + userName.replace(/[^A-Z0-9]/g, '') + '.pdf');
+    } catch (error) {
+      console.error('Certificate download failed:', error);
+      alert(error.message || 'Your certificate could not be downloaded. Please try again.');
+    } finally {
+      this.certificateDownloadInProgress = false;
+      if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
     }
   }
 

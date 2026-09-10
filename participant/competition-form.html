@@ -778,8 +778,7 @@
       </div>
       <h1 class="hero-heading">Flowers of Quran<br></h1>
       <p class="hero-subtitle">
-        Welcome to the annual Quranic learning competition! Please complete all fields in order and submit your Flowers
-        of Quran Certificate to finalize your official participation.
+        Welcome to the ‘Flowers of Quran’ competition!
       </p>
     </div>
 
@@ -901,10 +900,11 @@
           </label>
           <div id="cert-info-text" style="display: none; font-size: 0.8rem; color: var(--text-dark); background: #FFF9E6; border: 1.5px solid var(--gold-border); padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-weight: 600;">
             <i class="fa-solid fa-circle-info" style="color: var(--gold-dark); margin-right: 4px;"></i>
-            A valid Certificate of Completion is automatically awarded to students who successfully finish reading all 24 chapters and pass every quiz in the Learning Garden.
+            Complete all 24 chapters and quizzes, then open your course certificate to receive your saved FQ number. Use the same mobile number you registered with.
           </div>
           <input type="text" id="comp-cert-number" class="input-control uppercase-input"
-            placeholder="e.g. FOQ-CERT-2026-042" required>
+            placeholder="e.g. FQ-001" pattern="FQ-[0-9]{3,}" required>
+          <p id="saved-certificate-status" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">Enter the number printed beside the logo on your course certificate.</p>
         </div>
 
         <!-- Certificate File Upload (Optional / Recommended) -->
@@ -915,7 +915,7 @@
             <span class="optional-badge">Attach Proof</span>
           </label>
           <div class="cert-upload-zone" id="cert-upload-dropzone">
-            <input type="file" id="comp-cert-file" accept="image/*,.pdf" style="display: none;">
+            <input type="file" id="comp-cert-file" accept="image/jpeg,image/png,application/pdf" style="display: none;">
             <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
             <div class="upload-title">Click or drag & drop certificate here</div>
             <div class="upload-sub">Supports PDF, JPG, PNG (Max 5MB)</div>
@@ -961,10 +961,10 @@
             Registration Confirmed!
           </h2>
           <p style="color: var(--success); font-size: 0.95rem; font-weight: 700;">
-            Alhamdulillah, your competition entry has been accepted.
+            Alhamdulillah, your competition entry has been saved for organiser review.
           </p>
 
-          <div class="pass-reg-badge" id="pass-display-regid">
+          <div class="pass-reg-badge" id="pass-display-regid" style="overflow-wrap: anywhere;">
             FOQ-COMP-2026-8891
           </div>
 
@@ -991,7 +991,7 @@
             </div>
             <div>
               <div class="pass-item-label">Entry Status</div>
-              <div class="pass-item-val" style="color: var(--success);">✅ Verified Candidate</div>
+              <div class="pass-item-val" style="color: var(--success);">✅ Entry Received</div>
             </div>
           </div>
 
@@ -1019,6 +1019,9 @@
   <canvas id="confetti-canvas"
     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1000;"></canvas>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../src/js/supabase-client.js?v=20260909.3"></script>
+  <script src="../src/js/competition-service.js?v=20260909.3"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Elements
@@ -1034,38 +1037,29 @@
       const btnSubmit = document.getElementById('btn-submit-comp');
       const btnPrint = document.getElementById('btn-print-pass');
 
-      // Autofill from existing logged in user if available
-      try {
-        const cachedUser = localStorage.getItem('quran_user_logged_in');
-        if (cachedUser) {
-          const u = JSON.parse(cachedUser);
-          if (u.name) document.getElementById('comp-name').value = u.name;
-          if (u.email && !u.email.endsWith('@phone.quran')) document.getElementById('comp-email').value = u.email;
-          if (u.phone) {
-            const cleanPhone = String(u.phone).trim();
-            const match = cleanPhone.match(/^\+(\d{1,4})(\d{6,12})$/);
-            if (match) {
-              document.getElementById('comp-country-code').value = match[1];
-              document.getElementById('comp-phone-num').value = match[2];
-            } else {
-              document.getElementById('comp-phone-num').value = cleanPhone.replace(/\D/g, '');
-            }
-          }
+      // Prefill from the current session without guessing the country-code boundary.
+      void (async () => {
+        if (!window.supabase?.createClient) return;
+        const client = window.cloudSync.client ||= window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        const { data } = await client.auth.getUser();
+        const user = data?.user;
+        if (!user) return;
+        const { data: profile } = await client.from('profiles').select('name,phone,email,age,gender,fq_cert_num').eq('id', user.id).maybeSingle();
+        const certificateInput = document.getElementById('comp-cert-number');
+        if (profile?.fq_cert_num && !certificateInput.value) {
+          certificateInput.value = profile.fq_cert_num;
+          document.getElementById('saved-certificate-status').textContent = 'Your saved course certificate number has been filled in.';
         }
-      } catch (e) { }
-
-      // Auto-suggest certificate ID if user completed course locally
-      try {
-        const savedState = localStorage.getItem('flowers_of_quran_state');
-        if (savedState) {
-          const parsed = JSON.parse(savedState);
-          const completed = parsed.completed || [];
-          if (completed.length >= 24) {
-            const randomCode = Math.floor(1000 + Math.random() * 9000);
-            document.getElementById('comp-cert-number').value = `FOQ-2026-CERT-${randomCode}`;
-          }
+        const values = { ...user.user_metadata, ...profile };
+        values.email = profile?.email || window.cloudSync.contactEmail(user);
+        for (const field of ['name', 'email', 'age', 'gender']) {
+          const input = document.getElementById(`comp-${field}`);
+          if (values[field] && !input.value) input.value = values[field];
         }
-      } catch (e) { }
+        const phone = String(values.phone || user.phone || '');
+        const input = document.getElementById('comp-phone-num');
+        if (phone.startsWith('+91') && phone.length === 13 && !input.value) input.value = phone.slice(3);
+      })().catch(() => {});
 
       // File upload dropzone interaction
       if (dropzone && fileInput) {
@@ -1098,8 +1092,8 @@
 
       function handleFileSelected(file) {
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-          showAlert("The certificate file exceeds 5MB. Please choose a smaller file.", "error");
+        if (file.size > 5 * 1024 * 1024 || file.size === 0 || !['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) {
+          showAlert("Please choose a PDF, JPG or PNG certificate, up to 5MB.", "error");
           fileInput.value = "";
           return;
         }
@@ -1120,7 +1114,7 @@
       function showAlert(text, type = "error") {
         if (!alertBox) return;
         alertBox.className = `form-alert ${type}`;
-        alertBox.innerHTML = `${type === 'error' ? '⚠️' : '✅'} ${text}`;
+        alertBox.textContent = `${type === 'error' ? '⚠️' : '✅'} ${text}`;
         alertBox.style.display = "flex";
         alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
@@ -1188,9 +1182,11 @@
 
       // Form Submission Validation & Handler
       if (form) {
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
           e.preventDefault();
+          if (btnSubmit.disabled) return;
           clearAlert();
+          if (!form.reportValidity()) return;
 
           const name = document.getElementById('comp-name').value.trim().toUpperCase();
           const fatherName = document.getElementById('comp-father-name').value.trim().toUpperCase();
@@ -1213,8 +1209,8 @@
             return;
           }
 
-          if (!phoneNum || phoneNum.length < 6 || phoneNum.length > 15) {
-            showAlert("Please enter a valid mobile phone number (6 to 15 digits).");
+          if (!/^[1-9]\d{0,3}$/.test(countryCode) || !phoneNum || phoneNum.length < 6 || (countryCode + phoneNum).length > 15 || (countryCode === '91' && phoneNum.length !== 10)) {
+            showAlert("Please enter a valid country code and mobile number (10 digits for India).");
             return;
           }
 
@@ -1223,8 +1219,8 @@
             return;
           }
 
-          if (!age || parseInt(age, 10) < 3 || parseInt(age, 10) > 100) {
-            showAlert("Please enter a valid age between 3 and 100.");
+          if (!Number.isInteger(Number(age)) || Number(age) < 4 || Number(age) > 80) {
+            showAlert("Please enter a valid age between 4 and 80.");
             return;
           }
 
@@ -1233,7 +1229,7 @@
             return;
           }
 
-          if (!certNumber || certNumber.length < 3) {
+          if (!/^FQ-[0-9]{3,}$/.test(certNumber)) {
             showAlert("Please provide your Flowers of Quran Certificate ID / Number.");
             return;
           }
@@ -1243,75 +1239,17 @@
             return;
           }
 
-          // Generating Unique Registration ID
-          const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-          const regId = `FOQ-COMP-2026-${randomSuffix}`;
-          const fullPhone = `+${countryCode} ${phoneNum}`;
-
+          const fullPhone = `+${countryCode}${phoneNum}`;
+          const originalButton = btnSubmit.innerHTML;
           btnSubmit.disabled = true;
-          btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing Entry...`;
-
-          setTimeout(async () => {
-            // --- SUPABASE INTEGRATION ---
-            const supabaseUrl = "https://mpdpebcmdpozfsgukxww.supabase.co";
-            const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZHBlYmNtZHBvemZzZ3VreHd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA5NDksImV4cCI6MjEwMzMwNjk0OX0.vN4Gzpm5ritKLlL-lHKGd9fd6hwkcKR76Lb6ADduGGU";
-            
-            let certFileUrl = null;
-            
-            try {
-              if (window.supabase) {
-                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-                
-                // 1. Upload Certificate if selected
-                const fileInput = document.getElementById('comp-cert-file');
-                if (fileInput && fileInput.files.length > 0) {
-                  const file = fileInput.files[0];
-                  const fileExt = file.name.split('.').pop();
-                  const fileName = `${regId}_cert.${fileExt}`;
-                  
-                  const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('competition_certificates')
-                    .upload(fileName, file);
-                    
-                  if (!uploadError) {
-                    const { data: urlData } = supabase.storage
-                      .from('competition_certificates')
-                      .getPublicUrl(fileName);
-                    certFileUrl = urlData.publicUrl;
-                  }
-                }
-                
-                // 2. Insert into database
-                const { error: dbError } = await supabase
-                  .from('competition_participants')
-                  .insert([{
-                    program: 'flowers',
-                    registration_id: regId,
-                    student_name: name,
-                    father_name: fatherName,
-                    phone_number: fullPhone,
-                    email: email,
-                    age: parseInt(age),
-                    gender: gender,
-                    certificate_id: certNumber,
-                    certificate_file_url: certFileUrl
-                  }]);
-                  
-                if (dbError) console.error("Supabase DB Insert Error:", dbError);
-              }
-            } catch (err) {
-              console.error("Supabase integration failed:", err);
-            }
-            
-            // Save backup to localStorage
-            try {
-              const record = {
-                regId, name, fatherName, fullPhone, countryCode, phoneNum, email, age, gender, certNumber, certFileUrl, timestamp: new Date().toISOString()
-              };
-              const existing = JSON.parse(localStorage.getItem('flowers_competition_submissions') || '[]');
-              existing.push(record);
-              localStorage.setItem('flowers_competition_submissions', JSON.stringify(existing));
-            } catch (e) { }
+          btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving Entry...';
+          try {
+            const record = await window.submitCompetitionEntry('flowers', {
+              student_name: name, father_name: fatherName, country_code: countryCode,
+              phone_number: fullPhone, email: email.toLowerCase() || null, age: Number(age),
+              gender, certificate_id: certNumber, certificate_confirmed: certConfirmed
+            }, fileInput.files[0] || null);
+            const regId = record.registration_id;
 
             // Populate Pass View
             document.getElementById('pass-display-regid').textContent = regId;
@@ -1319,7 +1257,7 @@
             document.getElementById('pass-display-father').textContent = fatherName;
             document.getElementById('pass-display-phone').textContent = fullPhone;
             document.getElementById('pass-display-demographics').textContent = `${age} Years • ${gender}`;
-            document.getElementById('pass-display-cert').textContent = certNumber;
+            document.getElementById('pass-display-cert').textContent = record.certificate_id;
 
             // Transition UI
             form.style.display = "none";
@@ -1328,12 +1266,16 @@
 
             // Launch Celebration Confetti
             launchConfetti();
-          }, 600);
+          } catch (error) {
+            showAlert(error.message || 'Registration could not be saved. Please try again.');
+          } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = originalButton;
+          }
         });
       }
     });
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 
 </html>

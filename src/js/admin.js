@@ -60,7 +60,7 @@
 
     let client = null;
     let profiles = [];
-    let compParticipants = [];
+    const competitorFetches = {};
     let realtimeChannel = null;
     let isAdministrator = false;
     let isFetching = false;
@@ -87,6 +87,13 @@
 
     function showLogin(message = '') {
       isAdministrator = false;
+      profiles = [];
+      elements.compModal?.classList.remove('active');
+      elements.userModal?.classList.remove('active');
+      elements.flowersCompTableBody?.replaceChildren();
+      elements.pearlsCompTableBody?.replaceChildren();
+      elements.dashboardTable?.replaceChildren();
+      elements.usersTable?.replaceChildren();
       if (elements.loginView) elements.loginView.style.display = 'flex';
       if (elements.dashboardView) elements.dashboardView.style.display = 'none';
       if (elements.passwordInput) elements.passwordInput.value = '';
@@ -180,13 +187,20 @@
         email: String(profile.email || 'N/A'),
         age: profile.age ?? '—',
         gender: String(profile.gender || '—'),
-        joinedDate: formatDate(profile.updated_at || profile.created_at),
+        joinedDate: formatDate(profile.created_at || profile.updated_at),
         status: graduated ? 'Graduated' : (totalCompleted > 0 ? 'Active' : 'New'),
         overallProgress: Math.max(percentages.flowers, percentages.pearls, percentages.aayaat),
         flowersCompleted,
         pearlsCompleted,
         aayaatCompleted,
         percentages,
+        certificates: {
+          flowers: profile.fq_cert_num || profile.certificate_number || '—',
+          pearls: profile.pq_cert_num || '—',
+          aayaat: profile.aq_cert_num || '—'
+        },
+        certNumber: [profile.fq_cert_num || profile.certificate_number, profile.pq_cert_num, profile.aq_cert_num]
+          .filter(Boolean).join(' · ') || '—',
         loginSource: loginSource(profile)
       };
     }
@@ -238,6 +252,7 @@
 
     function showEmptyRow(tableBody, columnCount, message) {
       if (!tableBody) return;
+      tableBody.replaceChildren();
       const row = document.createElement('tr');
       const cell = document.createElement('td');
       cell.colSpan = columnCount;
@@ -255,7 +270,7 @@
       if (elements.dashboardCount) elements.dashboardCount.textContent = `${users.length} Users`;
 
       if (!users.length) {
-        showEmptyRow(elements.dashboardTable, 6, 'No matching user profiles found.');
+        showEmptyRow(elements.dashboardTable, 7, 'No matching user profiles found.');
         return;
       }
 
@@ -265,6 +280,7 @@
         appendCell(row, displayName(user), 'user-name-text');
         appendCell(row, user.phone !== 'N/A' ? user.phone : user.email);
         appendCell(row, user.joinedDate);
+        appendCell(row, user.certNumber);
         const progressColour = user.overallProgress >= 75 ? '#10B981' : (user.overallProgress < 40 ? '#F43F5E' : '#EAB308');
         appendProgressCell(row, user.overallProgress, progressColour);
         appendStatusCell(row, user.status);
@@ -279,7 +295,7 @@
       if (elements.usersCount) elements.usersCount.textContent = `${users.length} Users`;
 
       if (!users.length) {
-        showEmptyRow(elements.usersTable, 12, 'No matching user profiles found.');
+        showEmptyRow(elements.usersTable, 13, 'No matching user profiles found.');
         return;
       }
 
@@ -292,6 +308,7 @@
         appendCell(row, user.age);
         appendCell(row, user.gender);
         appendCell(row, user.joinedDate);
+        appendCell(row, user.certNumber);
         appendProgressCell(row, user.percentages.flowers, '#CC9933');
         appendProgressCell(row, user.percentages.pearls, '#2563EB');
         appendProgressCell(row, user.percentages.aayaat, '#D97706');
@@ -318,7 +335,7 @@
     function filteredProfiles(query) {
       const normalisedQuery = String(query || '').trim().toLowerCase();
       if (!normalisedQuery) return profiles;
-      return profiles.filter((user) => [user.name, user.phone, user.email, user.id]
+      return profiles.filter((user) => [user.name, user.phone, user.email, user.id, user.certNumber]
         .some((value) => String(value || '').toLowerCase().includes(normalisedQuery)));
     }
 
@@ -348,6 +365,9 @@
       setText('modal-user-gender', user.gender);
       setText('modal-login-source', user.loginSource);
       setText('modal-user-status', user.status);
+      setText('modal-flowers-certificate', user.certificates.flowers);
+      setText('modal-pearls-certificate', user.certificates.pearls);
+      setText('modal-aayaat-certificate', user.certificates.aayaat);
       setProgressDetails('flowers', user.flowersCompleted, user.percentages.flowers);
       setProgressDetails('pearls', user.pearlsCompleted, user.percentages.pearls);
       setProgressDetails('aayaat', user.aayaatCompleted, user.percentages.aayaat);
@@ -357,7 +377,7 @@
     async function isConfiguredAdministrator() {
       const { data, error } = await client.rpc('is_admin');
       if (error) {
-        throw new Error('Administrator security is not configured. Run supabase_admin_setup.sql in Supabase first.');
+        throw new Error('Unable to verify administrator access. Please contact the site owner.');
       }
       return data === true;
     }
@@ -398,12 +418,8 @@
       }
 
       try {
-        const { data, error } = await client
-          .from('profiles')
-          .select('*')
-          .order('updated_at', { ascending: false });
-
-        if (error) throw error;
+        const data = await readAllRows('profiles', 'updated_at');
+        if (!isAdministrator) return;
         profiles = (data || []).map(mapProfile);
         updateSummary();
         renderDashboardTable(filteredProfiles(elements.dashboardSearch?.value));
@@ -426,30 +442,37 @@
       }
     }
 
-    async function fetchCompetitors(showLoading = false) {
-      if (!isAdministrator) return;
-      try {
-        const { data, error } = await client
-          .from('competition_participants')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          if (error.code === '42P01') {
-             // Table doesn't exist yet, just ignore safely.
-             compParticipants = [];
-          } else {
-             throw error;
-          }
-        } else {
-          compParticipants = data || [];
-        }
-        
-        renderFlowersTable(compParticipants.filter(p => p.program === 'flowers'));
-        renderPearlsTable(compParticipants.filter(p => p.program === 'pearls'));
-      } catch (error) {
-        console.error("Error fetching competitors:", error);
+    async function readAllRows(table, orderColumn) {
+      const rows = [];
+      const pageSize = 500;
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await client.from(table).select('*')
+          .order(orderColumn, { ascending: false }).order('id', { ascending: false })
+          .range(offset, offset + pageSize - 1);
+        if (error) throw error;
+        rows.push(...(data || []));
+        if (!data || data.length < pageSize) return rows;
       }
+    }
+
+    async function fetchCompetitors(showLoading = false, program = null) {
+      if (!isAdministrator) return;
+      await Promise.all((program ? [program] : ['flowers', 'pearls']).map(async site => {
+        if (competitorFetches[site]) return;
+        competitorFetches[site] = true;
+        const body = site === 'flowers' ? elements.flowersCompTableBody : elements.pearlsCompTableBody;
+        const render = site === 'flowers' ? renderFlowersTable : renderPearlsTable;
+        if (showLoading) showEmptyRow(body, 6, 'Loading participants…');
+        try {
+          const participants = await readAllRows(`${site}_participants`, 'created_at');
+          if (isAdministrator) render(participants);
+        } catch (error) {
+          if (isAdministrator) showEmptyRow(body, 6, 'Unable to load participants. Please use Refresh to try again.');
+          console.error(`Unable to read ${site} participants:`, error);
+        } finally {
+          competitorFetches[site] = false;
+        }
+      }));
     }
 
     function renderFlowersTable(participants) {
@@ -457,7 +480,7 @@
       elements.flowersCompTableBody.replaceChildren();
       
       if (!participants.length) {
-        showEmptyRow(elements.flowersCompTableBody, 5, 'No flowers participants found.');
+        showEmptyRow(elements.flowersCompTableBody, 6, 'No flowers participants found.');
         return;
       }
 
@@ -467,6 +490,7 @@
         appendCell(row, p.student_name || '—', 'user-name-text');
         appendCell(row, p.gender || '—');
         appendCell(row, p.phone_number || p.email || '—');
+        appendCell(row, p.certificate_id || '—');
         
         const actionCell = document.createElement('td');
         actionCell.style.textAlign = 'right';
@@ -488,7 +512,7 @@
       elements.pearlsCompTableBody.replaceChildren();
       
       if (!participants.length) {
-        showEmptyRow(elements.pearlsCompTableBody, 5, 'No pearls participants found.');
+        showEmptyRow(elements.pearlsCompTableBody, 6, 'No pearls participants found.');
         return;
       }
 
@@ -498,6 +522,7 @@
         appendCell(row, p.student_name || '—', 'user-name-text');
         appendCell(row, p.gender || '—');
         appendCell(row, p.phone_number || p.email || '—');
+        appendCell(row, p.certificate_id || '—');
         
         const actionCell = document.createElement('td');
         actionCell.style.textAlign = 'right';
@@ -514,7 +539,7 @@
       });
     }
 
-    function openCompDetails(p, titleIconText, program) {
+    async function openCompDetails(p, titleIconText, program) {
       if (!elements.compModal) return;
       
       elements.compModalElements.icon.textContent = program === 'flowers' ? '🌸' : '📿';
@@ -526,15 +551,37 @@
       elements.compModalElements.age.textContent = p.age || '—';
       elements.compModalElements.gender.textContent = p.gender || '—';
       elements.compModalElements.certId.textContent = p.certificate_id || '—';
-      
-      if (p.certificate_file_url) {
-        elements.compModalElements.btnViewCert.style.display = 'inline-flex';
-        elements.compModalElements.btnViewCert.href = p.certificate_file_url;
-      } else {
-        elements.compModalElements.btnViewCert.style.display = 'none';
+      setText('comp-modal-cert-verification', p.certificate_profile_id
+        ? 'Verified against the saved course certificate.' : 'This older entry has not been linked to a saved course certificate.');
+      const learnerButton = document.getElementById('btn-view-certificate-learner');
+      const learner = profiles.find(user => user.id === p.certificate_profile_id);
+      if (learnerButton) {
+        learnerButton.hidden = !learner;
+        learnerButton.onclick = () => { elements.compModal.classList.remove('active'); openUserDetails(learner); };
       }
       
+      const link = elements.compModalElements.btnViewCert;
+      link.style.display = 'none';
+      link.removeAttribute('href');
+      const status = document.getElementById('comp-certificate-status');
+      if (status) status.textContent = p.certificate_file_path ? 'Loading certificate…' : 'No certificate document attached.';
+      setText('comp-modal-submitted', formatDate(p.created_at));
+      setText('comp-modal-confirmed', p.certificate_confirmed ? 'Confirmed' : '—');
+      elements.compModal.dataset.participantId = p.id;
       elements.compModal.classList.add('active');
+      if (p.certificate_file_path) {
+        try {
+          const { data, error } = await client.storage.from('competition_certificates')
+            .createSignedUrl(p.certificate_file_path, 300);
+          if (elements.compModal.dataset.participantId !== p.id || !isAdministrator) return;
+          if (error || !data?.signedUrl) throw error || new Error('Certificate unavailable');
+          link.href = data.signedUrl;
+          link.style.display = 'inline-flex';
+          if (status) status.textContent = 'This private link expires after 5 minutes. Reopen these details for a new link.';
+        } catch (error) {
+          if (elements.compModal.dataset.participantId === p.id && status) status.textContent = 'Certificate could not be loaded. Reopen these details to try again.';
+        }
+      }
     }
 
     function startRealtime() {
@@ -544,7 +591,15 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
           void fetchProfiles(false);
         })
-        .subscribe();
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'flowers_participants' }, () => {
+          void fetchCompetitors(false, 'flowers');
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pearls_participants' }, () => {
+          void fetchCompetitors(false, 'pearls');
+        })
+        .subscribe(status => {
+          if (status === 'SUBSCRIBED') void fetchCompetitors(false);
+        });
     }
 
     async function stopRealtime() {
@@ -580,8 +635,15 @@
 
     elements.refreshDashboard?.addEventListener('click', () => void fetchProfiles(true));
     elements.refreshUsers?.addEventListener('click', () => void fetchProfiles(true));
-    elements.btnRefreshFlowersComp?.addEventListener('click', () => void fetchCompetitors(true));
-    elements.btnRefreshPearlsComp?.addEventListener('click', () => void fetchCompetitors(true));
+    elements.btnRefreshFlowersComp?.addEventListener('click', () => void fetchCompetitors(true, 'flowers'));
+    elements.btnRefreshPearlsComp?.addEventListener('click', () => void fetchCompetitors(true, 'pearls'));
+    // Recover after background tabs and interrupted realtime connections.
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && isAdministrator) void fetchCompetitors(false);
+    });
+    setInterval(() => {
+      if (!document.hidden && isAdministrator) void fetchCompetitors(false);
+    }, 30000);
     
     elements.dashboardSearch?.addEventListener('input', (event) => renderDashboardTable(filteredProfiles(event.target.value)));
     elements.usersSearch?.addEventListener('input', (event) => renderUsersTable(filteredProfiles(event.target.value)));
@@ -620,7 +682,10 @@
     client.auth.onAuthStateChange((event) => {
       // Avoid clearing the authorization error when an authenticated but
       // unauthorized account is deliberately signed out.
-      if (event === 'SIGNED_OUT' && isAdministrator) showLogin();
+      if (event === 'SIGNED_OUT' && isAdministrator) {
+        showLogin();
+        setTimeout(() => void stopRealtime(), 0);
+      }
     });
 
     void (async () => {

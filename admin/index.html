@@ -77,7 +77,7 @@
           <i class="fa-solid fa-chart-line"></i>
           <span>Dashboard Overview</span>
         </button>
-        <button class="sidebar-link" disabled aria-disabled="true" title="Contact-message storage is not configured yet">
+        <button class="sidebar-link">
           <i class="fa-solid fa-users"></i>
           <span>Registered Users</span>
         </button>
@@ -110,7 +110,7 @@
         <header class="admin-top-header">
           <div>
             <h1 class="hero-main-title" style="font-size: 2rem; margin-bottom: 0;">Hello, Admin 👋</h1>
-            <p class="section-sub-title">Welcome back to Aayaatul Quran Overview</p>
+            <p class="section-sub-title">Registered users across all three Quran learning sites</p>
           </div>
           <div class="admin-top-actions">
             <div class="search-box">
@@ -172,6 +172,7 @@
                   <th>User Name</th>
                   <th>Phone / Email</th>
                   <th>Joined Date</th>
+                  <th>Certificates</th>
                   <th>Overall Progress</th>
                   <th>Status</th>
                 </tr>
@@ -223,9 +224,10 @@
                   <th>Age</th>
                   <th>Gender</th>
                   <th>Joined</th>
+                  <th>Certificates</th>
                   <th>🌸 Flowers</th>
-                  <th>📿 Pearls</th>
-                  <th>📖 Aayaat</th>
+                  <th>💎 Pearls</th>
+                  <th>🌙 Aayaat</th>
                   <th>Status</th>
                   <th style="text-align: right;">Action</th>
                 </tr>
@@ -261,6 +263,7 @@
                   <th>Name</th>
                   <th>Gender</th>
                   <th>Phone Number</th>
+                  <th>Certificate</th>
                   <th style="text-align: right;">Action</th>
                 </tr>
               </thead>
@@ -294,6 +297,7 @@
                   <th>Name</th>
                   <th>Gender</th>
                   <th>Phone Number</th>
+                  <th>Certificate</th>
                   <th style="text-align: right;">Action</th>
                 </tr>
               </thead>
@@ -361,7 +365,7 @@
             <div class="progress-bar-bg" style="width: 100%; height: 8px;">
               <div class="progress-bar-fill" id="modal-flowers-bar" style="width: 0%; background: #CC9933; height: 100%; border-radius: 4px; transition: width 0.8s ease;"></div>
             </div>
-            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;"><span id="modal-flowers-count">0</span> / 24 completed</p>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;"><span id="modal-flowers-count">0</span> / 24 completed · Certificate: <span id="modal-flowers-certificate">—</span></p>
           </div>
 
           <!-- Pearls of Quran -->
@@ -373,7 +377,7 @@
             <div class="progress-bar-bg" style="width: 100%; height: 8px;">
               <div class="progress-bar-fill" id="modal-pearls-bar" style="width: 0%; background: #2563EB; height: 100%; border-radius: 4px; transition: width 0.8s ease;"></div>
             </div>
-            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;"><span id="modal-pearls-count">0</span> completed</p>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;"><span id="modal-pearls-count">0</span> completed · Certificate: <span id="modal-pearls-certificate">—</span></p>
           </div>
 
           <!-- Aayaatul Quran -->
@@ -385,7 +389,7 @@
             <div class="progress-bar-bg" style="width: 100%; height: 8px;">
               <div class="progress-bar-fill" id="modal-aayaat-bar" style="width: 0%; background: #D97706; height: 100%; border-radius: 4px; transition: width 0.8s ease;"></div>
             </div>
-            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;"><span id="modal-aayaat-count">0</span> completed</p>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;"><span id="modal-aayaat-count">0</span> completed · Certificate: <span id="modal-aayaat-certificate">—</span></p>
           </div>
         </div>
 
@@ -414,7 +418,7 @@
           <div class="brand-flower-icon" style="font-size: 1.5rem;" id="comp-modal-icon">🏆</div>
           <div>
             <h2 class="brand-title" style="font-size: 1.3rem;">Participant Details</h2>
-            <p class="section-card-sub" style="margin:0;" id="comp-modal-reg-id">ID: —</p>
+            <p class="section-card-sub" style="margin:0; overflow-wrap:anywhere;" id="comp-modal-reg-id">ID: —</p>
           </div>
         </div>
         <button class="btn-close-modal" id="btn-close-comp-modal" style="position: static; margin: 0;">✕</button>
@@ -427,10 +431,14 @@
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;"><strong>Phone:</strong> <span id="comp-modal-phone">—</span></p>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;"><strong>Email:</strong> <span id="comp-modal-email">—</span></p>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;"><strong>Demographics:</strong> <span id="comp-modal-age">—</span> Years • <span id="comp-modal-gender">—</span></p>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;"><strong>Certificate ID:</strong> <span id="comp-modal-cert-id">—</span></p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;"><strong>Certificate ID:</strong> <span id="comp-modal-cert-id">—</span></p>
+          <p id="comp-modal-cert-verification" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;"></p>
+          <button id="btn-view-certificate-learner" type="button" class="action-btn" hidden style="margin-bottom: 12px;">View learner record</button>
           
           <div style="text-align: center; border-top: 1px solid var(--gold-border); padding-top: 12px;">
-            <a href="#" target="_blank" id="btn-view-certificate" class="btn-next-question" style="display: inline-flex; width: 100%; justify-content: center; text-decoration: none; padding: 10px;">
+            <p style="font-size: 0.85rem; margin-bottom: 8px;"><strong>Submitted:</strong> <span id="comp-modal-submitted">—</span> • <strong>Declaration:</strong> <span id="comp-modal-confirmed">—</span></p>
+            <p id="comp-certificate-status" role="status" style="font-size: 0.8rem; margin-bottom: 8px;"></p>
+            <a target="_blank" rel="noopener noreferrer" id="btn-view-certificate" class="btn-next-question" style="display: none; width: 100%; justify-content: center; text-decoration: none; padding: 10px;">
               <i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i> View Certificate
             </a>
           </div>
@@ -440,7 +448,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4"></script>
-  <script src="../src/js/admin.js?v=3.0"></script>
+  <script src="../src/js/admin.js?v=20260909.3"></script>
 </body>
 
 </html>

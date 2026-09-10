@@ -500,16 +500,19 @@
 
         <!-- Preview of the certificate image (Scaled down to fit screen without scrolling) -->
         <div
-          style="position: relative; display: inline-block; width: 100%; max-width: 380px; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          style="container-type: inline-size; position: relative; display: inline-block; width: 100%; max-width: 380px; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
           <img src="assets/downloads/FLOWERS OF QURAN CERTIFICATE.jpg.jpeg" alt="Certificate Preview"
             style="width: 100%; display: block;">
+          <div id="cert-preview-number" hidden aria-label="Certificate number"
+            style="position: absolute; top: 13%; left: 78.6%; transform: translate(-50%, -50%); font-family: Helvetica, Arial, sans-serif; font-weight: 700; font-size: 2.7cqw; line-height: 1; color: #282d30; white-space: nowrap;"></div>
           <div id="cert-preview-name"
             style="position: absolute; top: 46.2%; left: 50%; transform: translate(-50%, -100%); margin-top: -4px; font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 19px; color: #000; text-align: center; width: 100%; text-transform: uppercase;">
             STUDENT NAME
           </div>
         </div>
 
-        <button id="btn-download-pdf-cert" class="btn-next-question" style="margin-top: 24px; width: 100%;">
+        <p id="cert-preview-status" role="status" style="font-size: 0.85rem; color: #4B5563; margin-top: 12px;"></p>
+        <button id="btn-download-pdf-cert" class="btn-next-question" style="margin-top: 16px; width: 100%;">
           📥 Download Certificate (PDF)
         </button>
       </div>
@@ -848,8 +851,8 @@
 
   <script src="src/js/questions.js?v=11.0"></script>
   <script src="src/js/audio.js?v=11.0"></script>
-  <script src="src/js/supabase-client.js?v=12.0"></script>
-  <script src="src/js/quran_app.js?v=15.0"></script>
+  <script src="src/js/supabase-client.js?v=20260909.3"></script>
+  <script src="src/js/quran_app.js?v=20260909.3"></script>
 </body>
 
 </html>

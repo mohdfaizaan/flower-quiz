@@ -1,5 +1,4 @@
-// Flowers of Quran - Supabase Cloud Sync & Authentication Manager
-
+// Shared Supabase authentication; keep this file consistent across the three sites.
 const SUPABASE_CONFIG = {
   url: "https://mpdpebcmdpozfsgukxww.supabase.co",
   anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZHBlYmNtZHBvemZzZ3VreHd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA5NDksImV4cCI6MjEwMzMwNjk0OX0.vN4Gzpm5ritKLlL-lHKGd9fd6hwkcKR76Lb6ADduGGU"
@@ -11,301 +10,173 @@ class SupabaseSyncManager {
     this.currentUser = null;
     this.client = null;
     this.onAuthChanged = null;
+    this.authInProgress = false;
   }
 
-  init(onAuthChangedCallback) {
-    this.onAuthChanged = onAuthChangedCallback;
+  init(callback) {
+    this.onAuthChanged = callback;
+    if (!window.supabase?.createClient) {
+      console.error('The sign-in service could not load. Refresh the page to try again.');
+      this.publishUser(null);
+      return;
+    }
+    this.client = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    this.initialized = true;
+    // Defer app callbacks so progress queries do not run inside the Auth lock.
+    this.client.auth.onAuthStateChange((event, session) => {
+      setTimeout(() => {
+        if (!this.authInProgress) this.publishUser(session?.user || null);
+      }, 0);
+    });
+  }
+
+  publishUser(user) {
+    const previousId = this.currentUser?.id;
+    this.currentUser = user ? { ...user, phone: user.phone || user.user_metadata?.phone || '' } : null;
     try {
-      if (typeof window.supabase !== 'undefined' && SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey) {
-        this.client = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true
-          }
-        });
-        this.initialized = true;
-
-        // Check active session or cached phone user on startup
-        this.client.auth.getSession().then(({ data: { session } }) => {
-          if (session?.user) {
-            this.currentUser = session.user;
-          } else {
-            const cached = localStorage.getItem('quran_user_logged_in');
-            if (cached) {
-              try {
-                const u = JSON.parse(cached);
-                if (u.phone) {
-                  this.currentUser = {
-                    id: 'phone_' + u.phone.replace(/\+/g, ''),
-                    phone: u.phone,
-                    user_metadata: { name: u.name || '' }
-                  };
-                }
-              } catch(e){}
-            }
-          }
-          if (this.onAuthChanged) this.onAuthChanged(this.currentUser);
-        });
-
-        // Listen for auth state changes (login, logout, token refresh, password recovery)
-        this.client.auth.onAuthStateChange((event, session) => {
-          if (session?.user) {
-            this.currentUser = session.user;
-            if (this.onAuthChanged) this.onAuthChanged(this.currentUser);
-          }
-        });
-      } else {
-        console.warn("Supabase SDK not found or config missing. Running in local mode.");
-      }
-    } catch (e) {
-      console.error("Supabase initialization error:", e);
+      if (!user) localStorage.removeItem('quran_user_logged_in');
+      else localStorage.setItem('quran_user_logged_in', JSON.stringify({
+        id: user.id,
+        phone: this.currentUser.phone,
+        name: user.user_metadata?.name || '',
+        email: this.contactEmail(user)
+      }));
+    } catch (_) { /* Browser storage is optional, authentication is not. */ }
+    if (!this.hasPublished || previousId !== this.currentUser?.id) {
+      this.hasPublished = true;
+      Promise.resolve(this.onAuthChanged?.(this.currentUser)).catch(error => console.error('Profile loading failed:', error));
     }
   }
 
   formatPhoneNumber(phone) {
-    if (!phone) return "";
-    let cleaned = String(phone).trim().replace(/[\s\-\(\)]/g, '');
-    if (!cleaned.startsWith('+')) {
-      if (cleaned.startsWith('0')) {
-        cleaned = cleaned.substring(1);
-      }
-      if (/^\d{10}$/.test(cleaned)) {
-        cleaned = '+91' + cleaned;
-      } else {
-        cleaned = '+' + cleaned;
-      }
-    }
-    return cleaned;
+    const cleaned = String(phone || '').trim().replace(/[\s\-()]/g, '');
+    if (cleaned.startsWith('+')) return cleaned;
+    const digits = cleaned.replace(/^0/, '');
+    return digits ? (/^\d{10}$/.test(digits) ? '+91' : '+') + digits : '';
   }
 
-  // Direct Phone Access with Real Supabase Auth & Database Syncing
+  contactEmail(user) {
+    return [user?.user_metadata?.contact_email, user?.user_metadata?.email, user?.email]
+      .find(value => typeof value === 'string' && value.trim() && !value.toLowerCase().endsWith('@phone.quran')) || '';
+  }
+
+  async syncProfile(user, registration = null) {
+    const { data: existing, error: readError } = await this.client.from('profiles')
+      .select('id,name,phone,email,age,gender').eq('id', user.id).maybeSingle();
+    if (readError) throw new Error('Unable to load your profile. Please try signing in again.');
+    const meta = user.user_metadata || {};
+    const realEmail = this.contactEmail(user);
+    const existingEmail = existing?.email && !existing.email.toLowerCase().endsWith('@phone.quran') ? existing.email : null;
+    const payload = {
+      id: user.id,
+      name: registration?.name ?? (existing?.name || meta.name || ''),
+      phone: registration?.phone ?? (existing?.phone || user.phone || meta.phone || ''),
+      email: registration ? registration.email : (existingEmail || realEmail || null),
+      age: registration?.age ?? existing?.age ?? meta.age ?? null,
+      gender: registration?.gender ?? (existing?.gender || meta.gender || ''),
+      updated_at: new Date().toISOString()
+    };
+    const { error } = await this.client.from('profiles').upsert(payload, { onConflict: 'id' });
+    if (error) throw new Error('Your account exists, but your profile could not be saved. Please try signing in again.');
+    return { ...user, phone: payload.phone, user_metadata: { ...meta, ...payload, contact_email: payload.email } };
+  }
+
   async loginWithPhone(countryCode, phoneNumber, metadata = {}, authMode = 'login') {
+    if (!this.initialized || !this.client) throw new Error('The sign-in service is unavailable. Refresh the page and try again.');
     const rawNum = String(phoneNumber || '').trim().replace(/\D/g, '');
-    const code = String(countryCode || '+91').trim();
-
-    if (!rawNum) {
-      throw new Error("Please enter your phone number.");
-    }
-
-    if (code === '+91' && rawNum.length !== 10) {
-      throw new Error("For +91 (India), please enter a valid 10-digit mobile number.");
-    } else if (rawNum.length < 6 || rawNum.length > 12) {
-      throw new Error("Please enter a valid mobile number (6 to 12 digits).");
-    }
-
+    const code = '+' + String(countryCode || '91').replace(/\D/g, '');
+    if (!/^\+[1-9]\d{0,3}$/.test(code) || !rawNum || rawNum.length < 6 || rawNum.length > 12 || (code + rawNum).length > 16)
+      throw new Error('Please enter a valid country code and mobile number.');
+    if (code === '+91' && rawNum.length !== 10) throw new Error('For +91 (India), please enter a valid 10-digit mobile number.');
     const fullPhone = code + rawNum;
-    const cleanDigits = fullPhone.replace(/\+/g, '');
-    const authEmail = `${cleanDigits}@phone.quran`;
-    const authPass = `PhoneUser@${cleanDigits}`;
-
-    let authUser = null;
-
-    if (this.initialized && this.client) {
-      if (authMode === 'login') {
-        const { data: signInData, error: signInErr } = await this.client.auth.signInWithPassword({
-          email: authEmail,
-          password: authPass
-        });
-        if (signInErr || !signInData?.user) {
-          throw new Error("Incorrect number or please register now.");
-        }
-        authUser = signInData.user;
-      } else {
-        const { data: signUpData, error: signUpErr } = await this.client.auth.signUp({
-          email: authEmail,
-          password: authPass,
-          options: {
-            data: {
-              name: metadata.name || '',
-              phone: fullPhone,
-              email: metadata.email || '',
-              age: metadata.age ? parseInt(metadata.age, 10) : null,
-              gender: metadata.gender || ''
-            }
-          }
-        });
-        if (signUpErr) {
-          throw new Error(signUpErr.message || "Number already registered. Please sign in.");
-        }
-        authUser = signUpData.user;
-      }
-
-      // 3. Upsert profile metadata in Supabase public.profiles table
-      if (authUser) {
-        try {
-          const profilePayload = {
-            id: authUser.id,
-            // Removed email field as requested
-            phone: fullPhone,
-            name: metadata.name || authUser.user_metadata?.name || '',
-            age: metadata.age ? parseInt(metadata.age, 10) : (authUser.user_metadata?.age || null),
-            gender: metadata.gender || authUser.user_metadata?.gender || '',
-            updated_at: new Date().toISOString()
-          };
-
-          const { error: upsertErr } = await this.client.from('profiles').upsert(profilePayload, { onConflict: 'id' });
-          if (upsertErr) {
-            // If phone, age, or gender columns don't exist yet in Supabase table, fallback safely
-            delete profilePayload.phone;
-            delete profilePayload.age;
-            delete profilePayload.gender;
-            await this.client.from('profiles').upsert(profilePayload, { onConflict: 'id' });
-          }
-        } catch (upsertErr) {
-          console.log("Supabase profile sync note:", upsertErr);
-        }
-      }
+    const cleanDigits = fullPhone.slice(1);
+    // Existing phone-only login retained by the owner's request. This is not phone verification.
+    const credentials = { email: `${cleanDigits}@phone.quran`, password: `PhoneUser@${cleanDigits}` };
+    let registration = null;
+    if (authMode === 'register') {
+      const age = metadata.age === '' || metadata.age == null ? null : Number(metadata.age);
+      registration = { name: String(metadata.name || '').trim().toUpperCase(), phone: fullPhone,
+        email: String(metadata.email || '').trim().toLowerCase() || null, age, gender: metadata.gender || '' };
+      if (registration.name.length < 2) throw new Error('Please enter your full name.');
+      if (registration.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registration.email)) throw new Error('Please enter a valid email address or leave it empty.');
+      if (age !== null && (!Number.isInteger(age) || age < 3 || age > 100)) throw new Error('Please enter an age between 3 and 100.');
+      if (registration.gender && !['Male', 'Female'].includes(registration.gender)) throw new Error('Please select a valid gender.');
     }
-
-    if (!authUser) {
-      authUser = {
-        id: 'phone_' + cleanDigits,
-        email: authEmail,
-        phone: fullPhone,
-        user_metadata: {
-          name: metadata.name || '',
-          phone: fullPhone,
-          age: metadata.age || null,
-          gender: metadata.gender || ''
-        }
-      };
-    } else {
-      authUser.phone = fullPhone;
+    this.authInProgress = true;
+    try {
+      const { data, error } = registration
+        ? await this.client.auth.signUp({ ...credentials, options: { data: { ...registration, contact_email: registration.email } } })
+        : await this.client.auth.signInWithPassword(credentials);
+      if (error) throw new Error(error.message || 'Sign-in failed. Please try again.');
+      if (!data?.session || !data.user || (registration && data.user.identities?.length === 0))
+        throw new Error(registration ? 'Registration could not sign you in. If this number is already registered, use Sign In.' : 'Please register this number first.');
+      const user = await this.syncProfile(data.user, registration);
+      this.publishUser(user);
+      return user;
+    } catch (error) {
+      await this.client.auth.signOut({ scope: 'local' }).catch(() => {});
+      this.publishUser(null);
+      throw error;
+    } finally {
+      this.authInProgress = false;
     }
-
-    this.currentUser = authUser;
-    localStorage.setItem('quran_user_logged_in', JSON.stringify({
-      phone: fullPhone,
-      email: authEmail,
-      name: metadata.name || authUser.user_metadata?.name || ''
-    }));
-
-    if (this.onAuthChanged) this.onAuthChanged(this.currentUser);
-    return authUser;
   }
 
-  // Send Direct Supabase SMS OTP to Phone Number
   async sendPhoneOtp(phone, metadata = {}) {
-    if (!this.initialized || !this.client) throw new Error("Supabase is not initialized.");
+    if (!this.client) throw new Error('The sign-in service is unavailable.');
     const formattedPhone = this.formatPhoneNumber(phone);
-    if (!formattedPhone || formattedPhone.length < 8) {
-      throw new Error("Please enter a valid phone number with country code (e.g. +91 98765 43210).");
-    }
-
-    const { data, error } = await this.client.auth.signInWithOtp({
-      phone: formattedPhone,
-      options: {
-        data: {
-          name: metadata.name || '',
-          age: metadata.age ? parseInt(metadata.age, 10) : null,
-          gender: metadata.gender || ''
-        }
-      }
-    });
-
+    const { data, error } = await this.client.auth.signInWithOtp({ phone: formattedPhone, options: { data: metadata } });
     if (error) throw error;
     return { data, formattedPhone };
   }
 
-  // Verify Supabase Phone OTP Code & Authenticate
-  async verifyPhoneOtp(phone, token, metadata = {}) {
-    if (!this.initialized || !this.client) throw new Error("Supabase is not initialized.");
-    const formattedPhone = this.formatPhoneNumber(phone);
-    if (!token || !token.trim()) {
-      throw new Error("Please enter the 6-digit OTP code sent to your phone.");
-    }
-
-    const { data, error } = await this.client.auth.verifyOtp({
-      phone: formattedPhone,
-      token: token.trim(),
-      type: 'sms'
-    });
-
+  async verifyPhoneOtp(phone, token) {
+    if (!this.client) throw new Error('The sign-in service is unavailable.');
+    const { data, error } = await this.client.auth.verifyOtp({ phone: this.formatPhoneNumber(phone), token: String(token || '').trim(), type: 'sms' });
     if (error) throw error;
-    this.currentUser = data.user;
-
-    // Resilient profile upsert upon successful OTP verification
-    if (data.user) {
-      try {
-        const profilePayload = {
-          id: data.user.id,
-          phone: formattedPhone,
-          name: metadata.name || data.user.user_metadata?.name || '',
-          age: metadata.age ? parseInt(metadata.age, 10) : (data.user.user_metadata?.age ? parseInt(data.user.user_metadata.age, 10) : null),
-          gender: metadata.gender || data.user.user_metadata?.gender || '',
-          updated_at: new Date().toISOString()
-        };
-
-        if (data.user.email) profilePayload.email = data.user.email;
-
-        const { error: upsertErr } = await this.client.from('profiles').upsert(profilePayload, { onConflict: 'id' });
-        if (upsertErr) {
-          delete profilePayload.phone;
-          delete profilePayload.age;
-          delete profilePayload.gender;
-          await this.client.from('profiles').upsert(profilePayload, { onConflict: 'id' });
-        }
-      } catch (upsertErr) {
-        console.log("Profile auto-upsert note after OTP verify:", upsertErr);
-      }
-    }
-
-    return data;
+    const user = await this.syncProfile(data.user);
+    this.publishUser(user);
+    return { ...data, user };
   }
 
   async logout() {
-    if (!this.initialized || !this.client) return;
-    const { error } = await this.client.auth.signOut();
-    if (error) console.error("Sign out error:", error);
-    this.currentUser = null;
+    if (this.client) {
+      const { error } = await this.client.auth.signOut({ scope: 'local' });
+      if (error) throw new Error('Unable to sign out. Please try again.');
+    }
+    this.publishUser(null);
   }
 
-  // Fetch only this module's progress without touching other apps
   async fetchProgress(userId, moduleKey = 'flowers_progress') {
-    if (!this.initialized || !this.client || !userId) return null;
-    try {
-      const { data, error } = await this.client
-        .from('profiles')
-        .select(moduleKey)
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (error) {
-        console.error(`Error fetching ${moduleKey}:`, error);
-        return null;
-      }
-
-      return data ? data[moduleKey] : null;
-    } catch (e) {
-      console.error("fetchProgress error:", e);
-      return null;
-    }
+    if (!this.client || !userId) return null;
+    const { data, error } = await this.client.from('profiles').select(moduleKey).eq('id', userId).maybeSingle();
+    if (error) { console.error(`Unable to load ${moduleKey}:`, error); return null; }
+    return data?.[moduleKey] || null;
   }
 
-  // Save only this module's progress without overwriting other apps
-  async saveProgress(userId, moduleKey = 'flowers_progress', progressData) {
-    if (!this.initialized || !this.client || !userId) return;
-    try {
-      const payload = {
-        id: userId,
-        [moduleKey]: progressData,
-        updated_at: new Date().toISOString()
-      };
-
-      if (this.currentUser?.phone) {
-        payload.phone = this.currentUser.phone;
-      }
-
-      const { error } = await this.client
-        .from('profiles')
-        .upsert(payload, { onConflict: 'id' });
-
-      if (error) {
-        console.error(`Error saving ${moduleKey}:`, error);
-      }
-    } catch (e) {
-      console.error("saveProgress error:", e);
+  async generateCertificateNumber(userId, courseCode) {
+    if (!this.client || !userId || this.currentUser?.id !== userId)
+      throw new Error('Please sign in again to download your certificate.');
+    if (!['FQ', 'PQ', 'AQ'].includes(courseCode)) throw new Error('Unknown certificate course.');
+    const { data, error } = await this.client.rpc('generate_certificate_number', { user_id: userId, course_code: courseCode });
+    if (error) {
+      console.error('Unable to generate certificate number:', error);
+      if (error.code === 'P0001') throw new Error('Complete all course sections and sync your progress before downloading a certificate.');
+      if (error.code === '42501' || error.code === 'P0002') throw new Error('Please sign in again to download your certificate.');
+      throw new Error('Your certificate number could not be saved. Please try again.');
     }
+    if (this.currentUser?.id !== userId) throw new Error('Your sign-in changed. Please try again.');
+    if (typeof data !== 'string' || !new RegExp('^' + courseCode + '-[0-9]{3,}$').test(data))
+      throw new Error('A valid certificate number was not returned. Please try again.');
+    return data;
+  }
+
+  async saveProgress(userId, moduleKey = 'flowers_progress', progressData) {
+    if (!this.client || !userId || this.currentUser?.id !== userId) return false;
+    const { error } = await this.client.from('profiles').upsert({ id: userId, [moduleKey]: progressData,
+      updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    if (error) console.error(`Unable to save ${moduleKey}:`, error);
+    return !error;
   }
 }
 
